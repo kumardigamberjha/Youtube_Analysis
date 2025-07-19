@@ -72,6 +72,9 @@ export default function Analyze() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [nextPageToken, setNextPageToken] = useState('');
   const [currentChannelId, setCurrentChannelId] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
   const [categorizedVideos, setCategorizedVideos] = useState({
     all: [],
     shorts: [],
@@ -247,7 +250,12 @@ export default function Analyze() {
         nextPageToken: data.nextPageToken || ''
       };
       
-      saveToCache(channelIdOrName, cacheData);
+      try {
+        await saveToCache(channelData.id, cacheData); // Use channelData.id instead of channelIdOrName
+        console.log('Cache saved for channel:', channelData.id);
+      } catch (error) {
+        console.error('Error saving cache:', error);
+      }
 
       setChannel(channelData);
       setVideos(videos);
@@ -304,13 +312,19 @@ export default function Analyze() {
         {/* Error Message */}
         {error && (
           <div className="max-w-2xl mx-auto mb-8">
-            <div className="bg-red-900/20 border border-red-500/50 backdrop-blur-sm rounded-xl p-4 text-red-400 text-center">
-              <span className="inline-flex items-center gap-2">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <div className="bg-red-900/20 border border-red-500/50 backdrop-blur-sm rounded-xl p-4 text-red-400">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                {error}
-              </span>
+                <span className="font-semibold">Error:</span>
+              </div>
+              <div className="text-sm ml-7">
+                <p>{error}</p>
+                <p className="mt-2 text-red-400/80 text-xs">
+                  If this error persists, please check the console for more details or try again later.
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -535,9 +549,9 @@ export default function Analyze() {
               ))}
             </div>
 
-            {/* Load More Button */}
-            {nextPageToken && (
-              <div className="mt-8 text-center">
+            {/* Action Buttons */}
+            <div className="mt-8 flex justify-center gap-4">
+              {nextPageToken && (
                 <button
                   onClick={async () => {
                     setIsLoadingMore(true);
@@ -590,6 +604,159 @@ export default function Analyze() {
                     'Load More Videos'
                   )}
                 </button>
+              )}
+
+              {/* Analyze Channel Button */}
+              <button
+                onClick={async () => {
+                  setIsAnalyzing(true);
+                  setError('');
+                  try {
+                    console.log('Starting channel analysis...');
+                    const response = await fetch('/api/analyze-channel', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        videos: videos,
+                        channelName: channel.snippet.title
+                      }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                      throw new Error(data.message || 'Failed to analyze channel');
+                    }
+
+                    if (!data || typeof data !== 'object') {
+                      throw new Error('Invalid response from analysis');
+                    }
+
+                    console.log('Analysis completed:', data);
+                    setAnalysis(data);
+                    setShowAnalysis(true);
+                  } catch (err) {
+                    console.error('Error analyzing channel:', err);
+                    setError(err.message || 'Failed to analyze channel. Please try again.');
+                    
+                    // Log detailed error information
+                    if (err.response) {
+                      console.error('Response status:', err.response.status);
+                      console.error('Response data:', err.response.data);
+                    }
+                  } finally {
+                    setIsAnalyzing(false);
+                  }
+                }}
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isAnalyzing}
+              >
+                {isAnalyzing ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Analyzing Channel...
+                  </span>
+                ) : (
+                  'Analyze Channel'
+                )}
+              </button>
+            </div>
+
+            {/* Analysis Modal */}
+            {showAnalysis && analysis && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                      Channel Analysis
+                    </h3>
+                    <button
+                      onClick={() => setShowAnalysis(false)}
+                      className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Themes */}
+                    <div className="bg-gray-700/50 rounded-xl p-4">
+                      <h4 className="font-semibold mb-2 text-purple-400">Top Performing Themes</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {analysis.themes.map((theme, index) => (
+                          <span key={index} className="px-3 py-1 bg-purple-500/20 rounded-full text-sm">
+                            {theme}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Effective Tags */}
+                    <div className="bg-gray-700/50 rounded-xl p-4">
+                      <h4 className="font-semibold mb-2 text-blue-400">Most Effective Tags</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {analysis.effectiveTags.map((tag, index) => (
+                          <span key={index} className="px-3 py-1 bg-blue-500/20 rounded-full text-sm">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Video Types */}
+                    <div className="bg-gray-700/50 rounded-xl p-4">
+                      <h4 className="font-semibold mb-2 text-purple-400">Best Performing Video Types</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {analysis.videoTypes.map((type, index) => (
+                          <span key={index} className="px-3 py-1 bg-purple-500/20 rounded-full text-sm">
+                            {type}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Patterns */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-gray-700/50 rounded-xl p-4">
+                        <h4 className="font-semibold mb-2 text-blue-400">Length Patterns</h4>
+                        <p className="text-gray-300">{analysis.lengthPatterns}</p>
+                      </div>
+                      <div className="bg-gray-700/50 rounded-xl p-4">
+                        <h4 className="font-semibold mb-2 text-purple-400">Posting Patterns</h4>
+                        <p className="text-gray-300">{analysis.postingPatterns}</p>
+                      </div>
+                    </div>
+
+                    {/* Video Ideas */}
+                    <div className="bg-gray-700/50 rounded-xl p-4">
+                      <h4 className="font-semibold mb-4 text-2xl bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                        Recommended Video Ideas
+                      </h4>
+                      <div className="space-y-4">
+                        {analysis.videoIdeas.map((idea, index) => (
+                          <div key={index} className="bg-gray-800/50 rounded-xl p-4">
+                            <h5 className="font-semibold text-lg mb-2 text-blue-400">{idea.title}</h5>
+                            <p className="text-gray-300 mb-3">{idea.description}</p>
+                            <div className="flex flex-wrap gap-2">
+                              {idea.suggestedTags.map((tag, tagIndex) => (
+                                <span key={tagIndex} className="px-2 py-1 bg-blue-500/10 rounded-full text-xs text-blue-300">
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
