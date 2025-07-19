@@ -1,28 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getCachedData, saveToCache, cleanupOldCache } from '../lib/cache';
 
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 
 // Helper to extract channel ID from input (URL or direct ID)
 function extractChannelId(input) {
   try {
-    const url = new URL(input);
-    if (url.pathname.startsWith('/channel/')) {
-      return url.pathname.split('/')[2];
+    // Clean up the input
+    const cleanInput = input.trim();
+    
+    // Handle direct channel IDs (UC...)
+    if (cleanInput.startsWith('UC') && cleanInput.length >= 24) {
+      return cleanInput;
     }
-    if (url.pathname.startsWith('/user/')) {
-      return url.pathname.split('/')[2];
+
+    // Handle @username format
+    if (cleanInput.startsWith('@')) {
+      return cleanInput.slice(1);
     }
-    if (url.pathname.startsWith('/c/')) {
-      return url.pathname.split('/')[2];
+
+    // Try parsing as URL
+    let url;
+    try {
+      // If input doesn't start with http/https, prepend https://
+      if (!cleanInput.startsWith('http')) {
+        url = new URL(`https://${cleanInput}`);
+      } else {
+        url = new URL(cleanInput);
+      }
+    } catch {
+      // If not a valid URL and not starting with @, return as is
+      return cleanInput;
     }
-    if (url.pathname.startsWith('/@')) {
-      return url.pathname.split('/')[1];
+
+    // Normalize the hostname
+    if (!url.hostname.includes('youtube.com')) {
+      url = new URL(`https://youtube.com${url.pathname}`);
     }
+
+    // Extract ID from various URL formats
+    if (url.pathname.includes('/channel/')) {
+      return url.pathname.split('/channel/')[1]?.split('/')[0];
+    }
+    if (url.pathname.includes('/c/')) {
+      return url.pathname.split('/c/')[1]?.split('/')[0];
+    }
+    if (url.pathname.includes('/user/')) {
+      return url.pathname.split('/user/')[1]?.split('/')[0];
+    }
+    if (url.pathname.includes('/@')) {
+      return url.pathname.split('/@')[1]?.split('/')[0];
+    }
+    
+    // If no matches found, return cleaned input
+    return cleanInput;
   } catch (e) {
-    if (input.startsWith('@')) return input.slice(1);
-    return input;
+    console.error('Error extracting channel ID:', e);
+    return input.trim();
   }
-  return input;
 }
 
 export default function Analyze() {
@@ -33,6 +68,63 @@ export default function Analyze() {
   const [channel, setChannel] = useState(null);
   const [videos, setVideos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [nextPageToken, setNextPageToken] = useState('');
+  const [currentChannelId, setCurrentChannelId] = useState('');
+  const [categorizedVideos, setCategorizedVideos] = useState({
+    all: [],
+    shorts: [],
+    full: [],
+    trending: [], // Changed from popular/mostViewed to trending (last 7 days performance)
+    live: [] // Added live/upcoming streams category
+  });
+
+  // Clean up old cache files when component mounts
+  useEffect(() => {
+    const cleanup = async () => {
+      try {
+        await cleanupOldCache();
+      } catch (error) {
+        console.error('Error cleaning up cache:', error);
+      }
+    };
+    cleanup();
+  }, []);
+
+  // Categorize videos when videos array changes
+  useEffect(() => {
+    if (videos.length > 0) {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const categorized = {
+        all: videos,
+        shorts: videos.filter(video => {
+          const isShort = video.snippet?.title?.toLowerCase().includes('#shorts') ||
+            (video.snippet?.thumbnails?.maxres?.height > video.snippet?.thumbnails?.maxres?.width);
+          return isShort;
+        }),
+        full: videos.filter(video => {
+          const isShort = video.snippet?.title?.toLowerCase().includes('#shorts') ||
+            (video.snippet?.thumbnails?.maxres?.height > video.snippet?.thumbnails?.maxres?.width);
+          return !isShort;
+        }),
+        trending: videos.filter(video => {
+          // Videos from last 7 days, sorted by views
+          const publishDate = new Date(video.snippet?.publishedAt);
+          return publishDate >= sevenDaysAgo;
+        }).sort((a, b) => 
+          (Number(b.statistics?.viewCount) || 0) - (Number(a.statistics?.viewCount) || 0)
+        ),
+        live: videos.filter(video => 
+          video.snippet?.liveBroadcastContent === 'live' || 
+          video.snippet?.liveBroadcastContent === 'upcoming'
+        )
+      };
+      setCategorizedVideos(categorized);
+    }
+  }, [videos]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,33 +134,72 @@ export default function Analyze() {
     setSelectedVideo(null);
     setLoading(true);
     setSubmitted(input);
+    
     const channelIdOrName = extractChannelId(input.trim());
+    console.log('Extracted channel ID/name:', channelIdOrName);
+    setCurrentChannelId(channelIdOrName);
+    
     try {
-      // Try fetching by channel ID first
-      let url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdOrName}&key=${YOUTUBE_API_KEY}`;
+      // Check cache first
+      const cachedData = await getCachedData(channelIdOrName);
+      if (cachedData?.channel && cachedData?.videos) {
+        console.log('Using cached data for channel:', channelIdOrName);
+        setChannel(cachedData.channel);
+        setVideos(cachedData.videos);
+        setNextPageToken(cachedData.nextPageToken || '');
+        setLoading(false);
+        return;
+      }
+
+      // If no cache, fetch from API
+      let channelData = null;
+      
+      // Try searching by channel ID first
+      let url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&id=${channelIdOrName}&key=${YOUTUBE_API_KEY}`;
       let res = await fetch(url);
       let data = await res.json();
-      let channelData = null;
+      console.log('Channel API response:', data);
+      
       if (data.items && data.items.length > 0) {
         channelData = data.items[0];
       } else {
-        // Try by username
-        url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${channelIdOrName}&key=${YOUTUBE_API_KEY}`;
+        // If no results, try searching by username
+        url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&forUsername=${channelIdOrName}&key=${YOUTUBE_API_KEY}`;
         res = await fetch(url);
         data = await res.json();
+        
         if (data.items && data.items.length > 0) {
           channelData = data.items[0];
+        } else {
+          // If still no results, try searching by custom URL or handle
+          url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${channelIdOrName}&key=${YOUTUBE_API_KEY}`;
+          res = await fetch(url);
+          data = await res.json();
+          
+          if (data.items && data.items.length > 0) {
+            // Get the channel ID from search results and fetch full channel data
+            const channelId = data.items[0].id.channelId;
+            url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&id=${channelId}&key=${YOUTUBE_API_KEY}`;
+            res = await fetch(url);
+            data = await res.json();
+            
+            if (data.items && data.items.length > 0) {
+              channelData = data.items[0];
+            }
+          }
         }
       }
+
       if (!channelData) {
         setError('Channel not found. Please check the URL or ID.');
         setLoading(false);
         return;
       }
-      setChannel(channelData);
+
       // Fetch latest 30 videos
       const uploadsPlaylistId = channelData.contentDetails?.relatedPlaylists?.uploads;
       let playlistId = uploadsPlaylistId;
+      
       if (!playlistId) {
         // Need to fetch contentDetails
         url = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelData.id}&key=${YOUTUBE_API_KEY}`;
@@ -76,28 +207,53 @@ export default function Analyze() {
         data = await res.json();
         playlistId = data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
       }
+
       if (!playlistId) {
         setError('Could not find uploads playlist for this channel.');
         setLoading(false);
         return;
       }
+
       // Fetch videos from uploads playlist
       url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=30&playlistId=${playlistId}&key=${YOUTUBE_API_KEY}`;
       res = await fetch(url);
       data = await res.json();
+
       if (!data.items) {
         setError('Could not fetch videos for this channel.');
         setLoading(false);
         return;
       }
+
+      // Store next page token for loading more videos later
+      setNextPageToken(data.nextPageToken || '');
+
       // Fetch video details (statistics, etc.)
-      const videoIds = data.items.map(item => item.snippet.resourceId.videoId).join(',');
+      const videoIds = data.items?.map(item => item.snippet?.resourceId?.videoId).filter(Boolean).join(',');
+      if (!videoIds) {
+        setError('Could not process video IDs.');
+        setLoading(false);
+        return;
+      }
       url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoIds}&key=${YOUTUBE_API_KEY}`;
       res = await fetch(url);
       const videosData = await res.json();
-      setVideos(videosData.items || []);
+      const videos = videosData?.items || [];
+
+      // Save to cache
+      const cacheData = {
+        channel: channelData,
+        videos: videos,
+        nextPageToken: data.nextPageToken || ''
+      };
+      
+      saveToCache(channelIdOrName, cacheData);
+
+      setChannel(channelData);
+      setVideos(videos);
       setLoading(false);
     } catch (err) {
+      console.error('Error fetching data:', err);
       setError('Failed to fetch channel or video data.');
       setLoading(false);
     }
@@ -160,37 +316,36 @@ export default function Analyze() {
         )}
 
         {/* Channel Info */}
-        {channel && (
+        {channel && channel.snippet && (
           <div className="max-w-5xl mx-auto mb-16">
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-3xl p-8 shadow-2xl">
               <div className="flex flex-col md:flex-row items-start gap-8">
                 <img
-                  src={channel.snippet.thumbnails.high.url}
-                  alt={channel.snippet.title}
+                  src={channel.snippet?.thumbnails?.high?.url || channel.snippet?.thumbnails?.default?.url}
+                  alt={channel.snippet?.title}
                   className="w-32 h-32 md:w-40 md:h-40 rounded-full ring-4 ring-red-500/50 shadow-xl mx-auto md:mx-0"
                 />
                 <div className="flex-1 text-center md:text-left">
-                  <h2 className="text-3xl font-bold mb-3">{channel.snippet.title}</h2>
+                  <h2 className="text-3xl font-bold mb-3">{channel.snippet?.title}</h2>
                   {/* Show full description */}
-                  <p className="text-gray-400 mb-6 whitespace-pre-wrap">{channel.snippet.description}</p>
+                  <p className="text-gray-400 mb-6 whitespace-pre-wrap">{channel.snippet?.description || 'No description available'}</p>
                   
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-6 mb-6">
                     <div className="bg-gray-900/50 rounded-xl p-4">
                       <div className="text-2xl font-bold text-red-400">
-                        {Number(channel.statistics.subscriberCount).toLocaleString()}
-                      </div>
+                        {Number(channel.statistics?.subscriberCount || 0).toLocaleString()}</div>
                       <div className="text-sm text-gray-500 uppercase tracking-wider">Subscribers</div>
                     </div>
                     <div className="bg-gray-900/50 rounded-xl p-4">
                       <div className="text-2xl font-bold text-blue-400">
-                        {Number(channel.statistics.videoCount).toLocaleString()}
+                        {Number(channel.statistics?.videoCount || 0).toLocaleString()}
                       </div>
                       <div className="text-sm text-gray-500 uppercase tracking-wider">Videos</div>
                     </div>
                     <div className="bg-gray-900/50 rounded-xl p-4">
                       <div className="text-2xl font-bold text-green-400">
-                        {Number(channel.statistics.viewCount).toLocaleString()}
+                        {Number(channel.statistics?.viewCount || 0).toLocaleString()}
                       </div>
                       <div className="text-sm text-gray-500 uppercase tracking-wider">Total Views</div>
                     </div>
@@ -200,8 +355,7 @@ export default function Analyze() {
                     href={`https://www.youtube.com/channel/${channel.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl font-semibold hover:from-red-700 hover:to-pink-700 transition-all duration-300"
-                    >
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl font-semibold hover:from-red-700 hover:to-pink-700 transition-all duration-300"                  >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                     </svg>
@@ -218,12 +372,37 @@ export default function Analyze() {
           <div className="max-w-7xl mx-auto">
             <h3 className="text-3xl font-bold mb-8 text-center">
               <span className="bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">
-                Latest Videos
+                Channel Videos
               </span>
             </h3>
             
+            {/* Video Category Tabs */}
+            <div className="flex justify-center mb-8 overflow-x-auto">
+              <div className="inline-flex bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-1">
+                {[
+                  { id: 'all', label: 'All Videos', count: categorizedVideos.all.length },
+                  { id: 'full', label: 'Full Videos', count: categorizedVideos.full.length },
+                  { id: 'shorts', label: 'Shorts', count: categorizedVideos.shorts.length },
+                  { id: 'trending', label: 'Trending', count: categorizedVideos.trending.length },
+                  { id: 'live', label: 'Live & Upcoming', count: categorizedVideos.live.length }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-300 ${
+                      activeTab === tab.id
+                        ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    {tab.label} ({tab.count})
+                  </button>
+                ))}
+              </div>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {videos.map(video => (
+              {categorizedVideos[activeTab].filter(video => video && video.snippet).map(video => (
                 <div
                   key={video.id}
                   className={`group bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl overflow-hidden hover:border-red-500/50 transition-all duration-300 cursor-pointer ${
@@ -234,8 +413,8 @@ export default function Analyze() {
                   {/* Thumbnail */}
                   <div className="relative aspect-video overflow-hidden">
                     <img
-                      src={video.snippet.thumbnails.medium.url}
-                      alt={video.snippet.title}
+                      src={video.snippet?.thumbnails?.medium?.url || video.snippet?.thumbnails?.default?.url}
+                      alt={video.snippet?.title || 'Video thumbnail'}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -244,27 +423,27 @@ export default function Analyze() {
                   {/* Content */}
                   <div className="p-4">
                     <h4 className="font-semibold text-lg mb-2 group-hover:text-red-400 transition-colors">
-                      {video.snippet.title}
+                      {video.snippet?.title || 'Untitled'}
                     </h4>
                     
                     {/* Quick Stats */}
-                    {!selectedVideo || selectedVideo !== video.id ? (
+                    {(!selectedVideo || selectedVideo !== video.id) && video.statistics && (
                       <div className="flex items-center gap-4 text-sm text-gray-400">
                         <span className="flex items-center gap-1">
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                             <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                           </svg>
-                          {Number(video.statistics.viewCount).toLocaleString()}
+                          {Number(video.statistics?.viewCount || 0).toLocaleString()}
                         </span>
                         <span className="flex items-center gap-1">
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                           </svg>
-                          {Number(video.statistics.likeCount || 0).toLocaleString()}
+                          {Number(video.statistics?.likeCount || 0).toLocaleString()}
                         </span>
                       </div>
-                    ) : null}
+                    )}
                     
                     {/* Expanded Details */}
                     {selectedVideo === video.id && (
@@ -273,7 +452,7 @@ export default function Analyze() {
                         <div className="bg-gray-900/50 rounded-lg p-3">
                           <div className="text-gray-500 text-xs mb-2 uppercase tracking-wider">Description</div>
                           <p className="text-gray-300 whitespace-pre-wrap">
-                            {video.snippet.description || 'No description available'}
+                            {video.snippet?.description || 'No description available'}
                           </p>
                         </div>
                         
@@ -282,31 +461,31 @@ export default function Analyze() {
                           <div className="bg-gray-900/50 rounded-lg p-2">
                             <div className="text-gray-500 text-xs">Published</div>
                             <div className="text-white font-medium">
-                              {new Date(video.snippet.publishedAt).toLocaleString()}
+                              {new Date(video.snippet?.publishedAt).toLocaleString()}
                             </div>
                           </div>
                           <div className="bg-gray-900/50 rounded-lg p-2">
                             <div className="text-gray-500 text-xs">Views</div>
                             <div className="text-white font-medium">
-                              {Number(video.statistics.viewCount).toLocaleString()}
+                              {Number(video.statistics?.viewCount || 0).toLocaleString()}
                             </div>
                           </div>
                           <div className="bg-gray-900/50 rounded-lg p-2">
                             <div className="text-gray-500 text-xs">Likes</div>
                             <div className="text-white font-medium">
-                              {Number(video.statistics.likeCount || 0).toLocaleString()}
+                              {Number(video.statistics?.likeCount || 0).toLocaleString()}
                             </div>
                           </div>
                           <div className="bg-gray-900/50 rounded-lg p-2">
                             <div className="text-gray-500 text-xs">Comments</div>
                             <div className="text-white font-medium">
-                              {Number(video.statistics.commentCount || 0).toLocaleString()}
+                              {Number(video.statistics?.commentCount || 0).toLocaleString()}
                             </div>
                           </div>
                         </div>
                         
                         {/* All Tags */}
-                        {video.snippet.tags && video.snippet.tags.length > 0 && (
+                        {video.snippet?.tags && video.snippet.tags.length > 0 && (
                           <div className="bg-gray-900/50 rounded-lg p-3">
                             <div className="text-gray-500 text-xs mb-2 uppercase tracking-wider">
                               Keywords ({video.snippet.tags.length} tags)
@@ -328,15 +507,15 @@ export default function Analyze() {
                         <div className="bg-gray-900/50 rounded-lg p-3 space-y-1">
                           <div className="flex justify-between">
                             <span className="text-gray-500 text-xs">Category</span>
-                            <span className="text-gray-300 text-xs">{video.snippet.categoryId}</span>
+                            <span className="text-gray-300 text-xs">{video.snippet?.categoryId || 'Not specified'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-500 text-xs">Default Language</span>
-                            <span className="text-gray-300 text-xs">{video.snippet.defaultLanguage || 'Not specified'}</span>
+                            <span className="text-gray-300 text-xs">{video.snippet?.defaultLanguage || 'Not specified'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-500 text-xs">Default Audio Language</span>
-                            <span className="text-gray-300 text-xs">{video.snippet.defaultAudioLanguage || 'Not specified'}</span>
+                            <span className="text-gray-300 text-xs">{video.snippet?.defaultAudioLanguage || 'Not specified'}</span>
                           </div>
                         </div>
                         
@@ -355,6 +534,64 @@ export default function Analyze() {
                 </div>
               ))}
             </div>
+
+            {/* Load More Button */}
+            {nextPageToken && (
+              <div className="mt-8 text-center">
+                <button
+                  onClick={async () => {
+                    setIsLoadingMore(true);
+                    try {
+                      // Fetch next page of videos
+                      let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=30&playlistId=${channel.contentDetails?.relatedPlaylists?.uploads}&pageToken=${nextPageToken}&key=${YOUTUBE_API_KEY}`;
+                      let res = await fetch(url);
+                      let data = await res.json();
+
+                      if (data.items) {
+                        // Fetch video details (statistics, etc.)
+                        const videoIds = data.items?.map(item => item.snippet?.resourceId?.videoId).filter(Boolean).join(',');
+                        url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoIds}&key=${YOUTUBE_API_KEY}`;
+                        res = await fetch(url);
+                        const videosData = await res.json();
+                        const newVideos = videosData?.items || [];
+
+                        // Update videos state and next page token
+                        const updatedVideos = [...videos, ...newVideos];
+                        setVideos(updatedVideos);
+                        setNextPageToken(data.nextPageToken || '');
+
+                        // Update cache with new videos
+                        const updatedCacheData = {
+                          channel,
+                          videos: updatedVideos,
+                          nextPageToken: data.nextPageToken || ''
+                        };
+                        saveToCache(currentChannelId, updatedCacheData);
+                      }
+                    } catch (err) {
+                      console.error('Error loading more videos:', err);
+                      setError('Failed to load more videos.');
+                    } finally {
+                      setIsLoadingMore(false);
+                    }
+                  }}
+                  className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl font-semibold hover:from-red-700 hover:to-pink-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Loading More...
+                    </span>
+                  ) : (
+                    'Load More Videos'
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
