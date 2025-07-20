@@ -1,0 +1,155 @@
+{
+  "data": {
+    "themes": [
+      "AI",
+      "Python",
+      "JavaScript",
+      "CSS",
+      "Career in IT",
+      "Job Hunt",
+      "Quiz",
+      "Education",
+      "Coding",
+      "Development",
+      "WordPress",
+      "Tutorial",
+      "Programming",
+      "Motivation",
+      "Setup Guide",
+      "Introduction",
+      "Coding motivation",
+      "hard work",
+      "student motivation",
+      "Coding India"
+    ],
+    "effectiveTags": [
+      "ai chatbot",
+      "machine learning",
+      "LLMs",
+      "Beginners",
+      "Tutorial",
+      "Groq Chatbot",
+      "generative ai",
+      "ai agent",
+      "Python AI",
+      "free chatbot tutorial",
+      "JavaScript tutorial",
+      "JavaScript for beginners",
+      "JavaScript data types",
+      "learn JavaScript",
+      "css",
+      "css full course",
+      "Class vs ID",
+      "AI",
+      "Career in IT",
+      "beginners",
+      "code snippets",
+      "coding",
+      "artificial intelligence",
+      "openai",
+      "deepseek",
+      "future of ai",
+      "chatgpt vs deepseek",
+      "python",
+      "*args and **kwargs in Python",
+      "Python arguments tutorial",
+      "Python function arguments",
+      "Python positional arguments",
+      "args and kwargs in python",
+      "while loop",
+      "python full course",
+      "python for beginners",
+      "python code with harry",
+      "python operators",
+      "operators in python",
+      "learn python",
+      "Coding india",
+      "Funny programming jokes",
+      "Web development",
+      "Website development",
+      "javascript",
+      "programming",
+      "Coding motivation",
+      "Coding India",
+      "Django Tutorial",
+      "Django forgot password",
+      "Django user authentication"
+    ],
+    "videoTypes": [
+      "Tutorials",
+      "Beginner Friendly",
+      "Tutorial",
+      "Explained",
+      "Shorts",
+      "#Shorts",
+      "Quiz",
+      "Programming",
+      "motivation",
+      "tutorial",
+      "guide",
+      "introduction",
+      "motivational",
+      "quiz"
+    ],
+    "lengthPatterns": "brief pattern",
+    "postingPatterns": "daily pattern",
+    "videoIdeas": [
+      {
+        "title": "Build an AI Chatbot with Python & Groq",
+        "description": "Create a free AI chatbot using Python and Groq's API for beginners.",
+        "suggestedTags": [
+          "ai chatbot",
+          "Groq Chatbot",
+          "Python AI",
+          "generative ai",
+          "Python for beginners"
+        ]
+      },
+      {
+        "title": "Python *args and **kwargs: Master Function Arguments",
+        "description": "Deep dive into Python's *args and **kwargs with code examples.",
+        "suggestedTags": [
+          "args and kwargs in python",
+          "Python function arguments",
+          "Python tutorial",
+          "code snippets",
+          "Python for beginners"
+        ]
+      },
+      {
+        "title": "JavaScript for Beginners: Data Types & Basics",
+        "description": "Learn JavaScript fundamentals like data types, variables, and loops.",
+        "suggestedTags": [
+          "JavaScript tutorial",
+          "JavaScript for beginners",
+          "JavaScript data types",
+          "learn JavaScript",
+          "coding"
+        ]
+      },
+      {
+        "title": "Django User Authentication & Forgot Password System",
+        "description": "Build a secure Django app with login, registration, and password recovery.",
+        "suggestedTags": [
+          "Django Tutorial",
+          "Django user authentication",
+          "Web development",
+          "Python",
+          "Career in IT"
+        ]
+      },
+      {
+        "title": "Motivation for Coders: Stay Hardworking in Your IT Career",
+        "description": "Stay inspired with tips for beginners and students in programming.",
+        "suggestedTags": [
+          "Coding motivation",
+          "student motivation",
+          "Career in IT",
+          "hard work",
+          "Education"
+        ]
+      }
+    ]
+  },
+  "timestamp": 1753017551434
+}

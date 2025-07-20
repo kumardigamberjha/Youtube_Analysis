@@ -1,0 +1,125 @@
+{
+  "data": {
+    "themes": [
+      "AI",
+      "ML",
+      "MCP Server",
+      "Notion",
+      "LLM",
+      "AI and ML Development",
+      "Shaw Talebi's Personal Experiences",
+      "AI agents",
+      "agentic ai",
+      "AI/Entrepreneurship",
+      "AI Development",
+      "Machine Learning",
+      "Data Science",
+      "AI in Industry"
+    ],
+    "effectiveTags": [
+      "AI",
+      "AI agents",
+      "agentic ai",
+      "ai agents explained",
+      "ai agents python",
+      "introduction",
+      "lecture",
+      "explained",
+      "for beginners",
+      "LLM",
+      "large language model",
+      "prompt",
+      "prompt engineering",
+      "ML",
+      "AI engineering",
+      "RLHF",
+      "what is ai agent",
+      "Python",
+      "deep learning",
+      "Hugging Face",
+      "python",
+      "ai",
+      "ai python",
+      "tutorial",
+      "datascience",
+      "resumetips"
+    ],
+    "videoTypes": [
+      "tutorial",
+      "lecture",
+      "explained",
+      "Tutorial/Explanation",
+      "Personal Vlog",
+      "tutorials",
+      "explainers",
+      "workflows",
+      "improvement",
+      "Tutorial",
+      "Success Story",
+      "How-to",
+      "Tutorials",
+      "Opinion/Analysis",
+      "Code Walkthroughs"
+    ],
+    "lengthPatterns": "brief to medium pattern",
+    "postingPatterns": "weekly pattern",
+    "videoIdeas": [
+      {
+        "title": "Understanding AI Agents: From Concept to Python Implementation",
+        "description": "Build your first AI agent using Python and Hugging Face, covering LLMs and prompt engineering basics.",
+        "suggestedTags": [
+          "AI agents",
+          "agentic ai",
+          "ai agents python",
+          "LLM",
+          "Python"
+        ]
+      },
+      {
+        "title": "Automating Workflows with Notion and Agentic AI",
+        "description": "How to integrate AI agents into Notion for task automation, productivity, and smart data organization.",
+        "suggestedTags": [
+          "Notion",
+          "agentic ai",
+          "AI in Industry",
+          "AI agents explained",
+          "automation"
+        ]
+      },
+      {
+        "title": "AI-Powered Resume Optimization: A Data-Driven Approach",
+        "description": "Leverage ML and prompt engineering to craft job-winning resumes using AI tools like Hugging Face.",
+        "suggestedTags": [
+          "resumetips",
+          "AI engineering",
+          "datascience",
+          "prompt engineering",
+          "LLM"
+        ]
+      },
+      {
+        "title": "Agentic AI Demystified: Building Autonomous AI Systems",
+        "description": "Deep dive into agentic AI architecture, RLHF, and autonomous decision-making with real-world examples.",
+        "suggestedTags": [
+          "agentic ai",
+          "AI agents explained",
+          "RLHF",
+          "machine learning",
+          "Python"
+        ]
+      },
+      {
+        "title": "From Concept to Deployment: My AI/ML Project Journey",
+        "description": "Shaw Talebi shares personal insights on developing AI/ML solutions for industry challenges and startup applications.",
+        "suggestedTags": [
+          "Shaw Talebi's Personal Experiences",
+          "AI Development",
+          "AI/Entrepreneurship",
+          "ML",
+          "AI engineering"
+        ]
+      }
+    ]
+  },
+  "timestamp": 1753019516812
+}

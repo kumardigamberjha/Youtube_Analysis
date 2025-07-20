@@ -1,0 +1,127 @@
+{
+  "data": {
+    "themes": [
+      "Hackathon",
+      "Security",
+      "AI",
+      "Career",
+      "Deep Learning",
+      "Data Engineering",
+      "Cybersecurity",
+      "Backend Development",
+      "Machine Learning",
+      "Full Stack Development",
+      "Language Learning",
+      "Cloud Analytics",
+      "General Chemistry",
+      "Survive in Tech",
+      "Python for Data Science",
+      "Build REST APIs",
+      "Vision Transformer Model",
+      "Technology",
+      "Career Development"
+    ],
+    "effectiveTags": [
+      "Data Viz",
+      "Svelte",
+      "D3",
+      "Tutorial",
+      "Interview",
+      "Podcast",
+      "freeCodeCamp",
+      "PyTorch",
+      "n8n",
+      "NASA",
+      "Google Calendar",
+      "Google Cloud",
+      "Rust",
+      "Go",
+      "TypeScript",
+      "Transformer Architecture",
+      "LLMs",
+      "Next.js",
+      "Typescript",
+      "React",
+      "Tailwind",
+      "Calendly",
+      "German Language",
+      "Chemistry",
+      "Tech",
+      "Python",
+      ".NET",
+      "JavaScript",
+      "AI",
+      "Developers",
+      "Career"
+    ],
+    "videoTypes": [
+      "Tutorial",
+      "Podcast",
+      "Course",
+      "Full Course",
+      "Build A Clone",
+      "Complete Beginners Course",
+      "University Course"
+    ],
+    "lengthPatterns": "brief pattern",
+    "postingPatterns": "brief pattern",
+    "videoIdeas": [
+      {
+        "title": "Build a Vision Transformer Model for Image Classification with PyTorch",
+        "description": "Learn to implement a Vision Transformer from scratch using PyTorch for computer vision tasks.",
+        "suggestedTags": [
+          "Transformer Architecture",
+          "PyTorch",
+          "AI",
+          "Deep Learning",
+          "Tutorial"
+        ]
+      },
+      {
+        "title": "Create a Secure REST API with FastAPI and JWT Authentication",
+        "description": "Build a backend REST API using Python and FastAPI while implementing cybersecurity best practices.",
+        "suggestedTags": [
+          "Backend Development",
+          "Python",
+          "Security",
+          "REST APIs",
+          "Tutorial"
+        ]
+      },
+      {
+        "title": "Ace Your AI Career Interview: Top 10 Machine Learning Questions Solved",
+        "description": "Prepare for tech interviews with in-depth solutions to common ML/AI questions and career advice.",
+        "suggestedTags": [
+          "Career",
+          "Machine Learning",
+          "Interview",
+          "AI",
+          "Career Development"
+        ]
+      },
+      {
+        "title": "Real-Time Data Dashboard with Svelte and D3.js: Live NASA API Integration",
+        "description": "Build a dynamic data visualization dashboard using Svelte, D3.js, and NASA's public API.",
+        "suggestedTags": [
+          "Data Viz",
+          "Svelte",
+          "D3",
+          "NASA",
+          "Tutorial"
+        ]
+      },
+      {
+        "title": "Rust vs Go for Cloud Engineering: Which Language Should You Learn in 2024?",
+        "description": "Compare Rust and Go for cloud-native development, including performance benchmarks and use cases.",
+        "suggestedTags": [
+          "Cloud Analytics",
+          "Rust",
+          "Go",
+          "Backend Development",
+          "Tech"
+        ]
+      }
+    ]
+  },
+  "timestamp": 1753007739222
+}

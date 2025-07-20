@@ -1,0 +1,110 @@
+{
+  "data": {
+    "themes": [
+      "Placement",
+      "Interview",
+      "Full Stack Web Development",
+      "Job Preparation",
+      "Interview Tips",
+      "Internship",
+      "placement preparation",
+      "engineering",
+      "tech placements",
+      "system design",
+      "Data Structures",
+      "Programming",
+      "Interview Preparation",
+      "Career Development",
+      "interview preparation",
+      "Placement Preparation",
+      "Software Engineering",
+      "Docker"
+    ],
+    "effectiveTags": [
+      "C++",
+      "how to code",
+      "C++ coding",
+      "C++ full course",
+      "C++ placement course",
+      "placement course",
+      "Coding",
+      "Placement Course",
+      "DSA",
+      "Development",
+      "CP"
+    ],
+    "videoTypes": [
+      "placement tips",
+      "interview learnings",
+      "full stack development",
+      "QnA",
+      "Interview Tips",
+      "Placement & Internship preparation",
+      "tutorial",
+      "study plan",
+      "interview prep",
+      "system design roadmap",
+      "Tutorial",
+      "Motivational",
+      "Success Story",
+      "success stories",
+      "placement preparation",
+      "Question-Answer"
+    ],
+    "lengthPatterns": "brief pattern",
+    "postingPatterns": "monthly pattern",
+    "videoIdeas": [
+      {
+        "title": "Cracking System Design Interviews with C++",
+        "description": "Learn how to crack system design interviews with C++ and get top tech placements",
+        "suggestedTags": [
+          "system design",
+          "C++ coding",
+          "placement preparation",
+          "tech placements"
+        ]
+      },
+      {
+        "title": "C++ Full Stack Web Development Course for Beginners",
+        "description": "Learn C++ full stack web development from scratch with our comprehensive course",
+        "suggestedTags": [
+          "C++ full course",
+          "full stack web development",
+          "placement course",
+          "C++ coding"
+        ]
+      },
+      {
+        "title": "Top 10 Data Structures and Algorithms for C++ Placement Preparation",
+        "description": "Learn the top 10 data structures and algorithms that will help you crack C++ placements",
+        "suggestedTags": [
+          "Data Structures",
+          "Algorithms",
+          "C++ placement course",
+          "placement preparation"
+        ]
+      },
+      {
+        "title": "How to Answer C++ Coding Questions in Technical Interviews",
+        "description": "Learn how to answer C++ coding questions confidently in technical interviews",
+        "suggestedTags": [
+          "C++ coding",
+          "Interview Tips",
+          "Interview Preparation",
+          "placement preparation"
+        ]
+      },
+      {
+        "title": "Docker and C++: A Comprehensive Guide to Building Scalable Applications",
+        "description": "Learn how to use Docker with C++ to build scalable and efficient applications",
+        "suggestedTags": [
+          "Docker",
+          "C++ development",
+          "Software Engineering",
+          "placement preparation"
+        ]
+      }
+    ]
+  },
+  "timestamp": 1752997865678
+}
