@@ -1,0 +1,135 @@
+{
+  "data": {
+    "themes": [
+      "AI",
+      "Machine Learning",
+      "SQL",
+      "Programming",
+      "E-Commerce",
+      "Technology",
+      "Coding",
+      "Data Science",
+      "Vibe Coding",
+      "GitHub Copilot",
+      "Productivity",
+      "B.Tech/BCA/B.Sc. degree",
+      "AI Tutorial",
+      "Automate Tasks with Pre-Built AI Agents",
+      "Build a Realistic Clothing Store",
+      "AI Coding",
+      "Web Development",
+      "Tech Trends",
+      "Next.js",
+      "Grafana",
+      "VS Code"
+    ],
+    "effectiveTags": [
+      "AI",
+      "Machine Learning",
+      "Beginners",
+      "Tutorial",
+      "MySQL",
+      "Programming Language",
+      "E-Commerce",
+      "Programming",
+      "Development",
+      "IDE",
+      "MCP",
+      "Growth Hacks",
+      "free coding tool",
+      "online coding",
+      "pdf merger",
+      "python programming",
+      "vibe coding",
+      "software engineer",
+      "Coding",
+      "Automation",
+      "E-commerce",
+      "Wordpress",
+      "Email Marketing",
+      "#nextjs",
+      "#webdevelopment",
+      "Software Development",
+      "Grafana",
+      "Docker",
+      "#vscode"
+    ],
+    "videoTypes": [
+      "Tutorial",
+      "Opinion",
+      "Roadmap",
+      "History",
+      "Explainer",
+      "tutorial",
+      "review",
+      "guide",
+      "news",
+      "Announcement",
+      "Secrets",
+      "Comparison",
+      "Review",
+      "Guide",
+      "Analysis"
+    ],
+    "lengthPatterns": "brief pattern",
+    "postingPatterns": "bi-weekly pattern",
+    "videoIdeas": [
+      {
+        "title": "Building a Clothing Store using Next.js and MySQL",
+        "description": "In this tutorial, we will build a realistic clothing store using Next.js and MySQL, covering topics like backend development, database integration, and e-commerce functionality.",
+        "suggestedTags": [
+          "Next.js",
+          "MySQL",
+          "E-Commerce",
+          "Development",
+          "Web Development"
+        ]
+      },
+      {
+        "title": "Automating Tasks using GitHub Copilot and Vibe Coding",
+        "description": "In this video, we will explore how to automate tasks using GitHub Copilot and Vibe Coding, covering topics like AI-powered coding, productivity hacks, and automation techniques.",
+        "suggestedTags": [
+          "GitHub Copilot",
+          "Vibe Coding",
+          "Automation",
+          "Productivity",
+          "AI"
+        ]
+      },
+      {
+        "title": "Building a Realistic AI-Powered Clothing Store using Python and GraphQL",
+        "description": "In this tutorial, we will build a realistic AI-powered clothing store using Python and GraphQL, covering topics like AI development, backend development, and e-commerce functionality.",
+        "suggestedTags": [
+          "Python",
+          "GraphQL",
+          "E-Commerce",
+          "AI",
+          "Development"
+        ]
+      },
+      {
+        "title": "Mastering Grafana for Data Visualization and Analysis",
+        "description": "In this tutorial, we will master Grafana for data visualization and analysis, covering topics like data science, visualization techniques, and Grafana configuration.",
+        "suggestedTags": [
+          "Grafana",
+          "Data Science",
+          "Visualization",
+          "Analysis",
+          "Development"
+        ]
+      },
+      {
+        "title": "Building a Full-Stack E-Commerce Website using Next.js and MySQL",
+        "description": "In this tutorial, we will build a full-stack e-commerce website using Next.js and MySQL, covering topics like frontend development, backend development, database integration, and e-commerce functionality.",
+        "suggestedTags": [
+          "Next.js",
+          "MySQL",
+          "E-Commerce",
+          "Development",
+          "Web Development"
+        ]
+      }
+    ]
+  },
+  "timestamp": 1752995781528
+}

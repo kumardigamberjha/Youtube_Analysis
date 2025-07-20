@@ -1,0 +1,108 @@
+{
+  "data": {
+    "themes": [
+      "AI",
+      "Machine Learning",
+      "Data Centers",
+      "Malware",
+      "Feature Engineering",
+      "IoT",
+      "Disaster Response",
+      "Cloud Computing",
+      "Cloud",
+      "Security",
+      "Quantum",
+      "Data",
+      "Computer Science",
+      "Data Pipelines",
+      "AI Security",
+      "AI Development Lifecycle",
+      "AI Accuracy",
+      "Emerging AI Applications",
+      "AI Trust and Identity",
+      "Jobs",
+      "Chatbots",
+      "Software Development",
+      "Accuracy",
+      "Data Governance & Access Control",
+      "Data Automation",
+      "AI Search",
+      "Quantum Computing",
+      "AI & Privacy"
+    ],
+    "effectiveTags": [
+      "IBM",
+      "IBM Cloud"
+    ],
+    "videoTypes": [
+      "Tutorial",
+      "Explainer",
+      "Analysis",
+      "How-to",
+      "educational",
+      "informative",
+      "technical",
+      "News",
+      "Discussion",
+      "Tutorials",
+      "Best Practices",
+      "News Analysis",
+      "Industry Trends"
+    ],
+    "lengthPatterns": "long-form content with occasional brief videos",
+    "postingPatterns": "consistent daily/weekly uploads with occasional breaks",
+    "videoIdeas": [
+      {
+        "title": "How IBM Cloud Combats Malware with AI Security",
+        "description": "Explore IBM's AI-driven malware detection solutions for secure cloud environments.",
+        "suggestedTags": [
+          "AI Security",
+          "Cloud",
+          "IBM Cloud",
+          "Malware"
+        ]
+      },
+      {
+        "title": "Quantum Computing's Role in AI Innovation with IBM",
+        "description": "Discover how IBM's quantum computing advances AI accuracy and performance.",
+        "suggestedTags": [
+          "Quantum Computing",
+          "AI Accuracy",
+          "IBM",
+          "AI"
+        ]
+      },
+      {
+        "title": "Building AI Trust with Data Governance in IBM Cloud",
+        "description": "Learn how IBM ensures data ethics and access control in AI workflows.",
+        "suggestedTags": [
+          "Data Governance & Access Control",
+          "AI Trust and Identity",
+          "IBM Cloud",
+          "Data"
+        ]
+      },
+      {
+        "title": "AI-Powered Disaster Response with IBM IoT Solutions",
+        "description": "See how IBM integrates IoT and AI for real-time crisis management.",
+        "suggestedTags": [
+          "IoT",
+          "Disaster Response",
+          "AI",
+          "IBM Cloud"
+        ]
+      },
+      {
+        "title": "Automating Data Pipelines for AI with IBM Cloud",
+        "description": "Master end-to-end data automation strategies for scalable AI development.",
+        "suggestedTags": [
+          "Data Automation",
+          "AI Development Lifecycle",
+          "IBM Cloud",
+          "Data Pipelines"
+        ]
+      }
+    ]
+  },
+  "timestamp": 1753007929452
+}
