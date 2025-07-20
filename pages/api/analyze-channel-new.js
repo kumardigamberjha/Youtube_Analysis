@@ -1,5 +1,5 @@
 import { Groq } from 'groq-sdk';
-import { saveToCache, getFromCache, cleanCache } from '../../lib/server-cache';
+import { saveToCache, getFromCache } from '../../data/cache';
 
 const groq = new Groq({
   apiKey: process.env.groq_api_key,
@@ -84,8 +84,8 @@ export default async function handler(req, res) {
       };
     }).filter(Boolean);
 
-    // Process videos in smaller chunks of 5 to stay within token limits
-    const videoChunks = chunkArray(allVideoData, 5);
+    // Process videos in chunks of 15
+    const videoChunks = chunkArray(allVideoData, 15);
     console.log(`Processing ${videoChunks.length} chunks of videos...`);
 
     const chunkAnalyses = [];
@@ -96,24 +96,23 @@ export default async function handler(req, res) {
       console.log(`Processing chunk ${i + 1} of ${videoChunks.length}...`);
 
       try {
-        // Prepare a more concise version of the chunk data
-        const compactChunk = chunk.map(video => ({
-          title: video.title,
-          views: video.views,
-          tags: (video.tags || []).slice(0, 5), // Limit to top 5 tags
-          publishDate: video.publishDate
-        }));
+        const prompt = `As a YouTube content strategist, analyze this subset of videos from the channel "${channelName}":
+        ${JSON.stringify(chunk, null, 2)}
 
-        const prompt = `Analyze these YouTube videos from channel "${channelName}":
-        ${JSON.stringify(compactChunk)}
+        Based on this data, provide analysis in the following format:
+        1. Top performing video themes
+        2. Most effective tags
+        3. Best performing video types
+        4. Optimal video length patterns
+        5. Best posting times/days
 
-        Return JSON only:
+        Format the response as JSON with the following structure:
         {
-          "themes": ["theme1", "theme2"],
-          "effectiveTags": ["tag1", "tag2"],
-          "videoTypes": ["type1", "type2"],
-          "lengthPatterns": "brief pattern",
-          "postingPatterns": "brief pattern"
+          "themes": ["theme1", "theme2", ...],
+          "effectiveTags": ["tag1", "tag2", ...],
+          "videoTypes": ["type1", "type2", ...],
+          "lengthPatterns": "description",
+          "postingPatterns": "description"
         }`;
 
         const completion = await groq.chat.completions.create({
@@ -127,7 +126,7 @@ export default async function handler(req, res) {
               content: prompt
             }
           ],
-          model: "llama-3.1-8b-instant",
+          model: process.env.groq_api_model,
           temperature: 0.7,
           max_tokens: 2048
         });
@@ -169,13 +168,16 @@ export default async function handler(req, res) {
 
     // Generate video ideas based on combined analysis
     try {
-      const videoIdeasPrompt = `Based on themes:${combinedAnalysis.themes.join(',')} and tags:${combinedAnalysis.effectiveTags.join(',')}, generate 5 video ideas for channel "${channelName}". Return JSON only:
+      const videoIdeasPrompt = `Based on this analysis of the channel "${channelName}":
+      ${JSON.stringify(combinedAnalysis, null, 2)}
+
+      Generate 10 specific video ideas that could perform well on this channel. Format as JSON:
       {
         "videoIdeas": [
           {
-            "title": "brief title",
-            "description": "one line description",
-            "suggestedTags": ["tag1", "tag2"]
+            "title": "title",
+            "description": "description",
+            "suggestedTags": ["tag1", "tag2", ...]
           }
         ]
       }`;
