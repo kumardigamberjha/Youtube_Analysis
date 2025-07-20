@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { getChannelIdFromUrl, getChannelStats } from '../lib/youtube';
 import { useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 
@@ -89,6 +90,10 @@ export default function Compare() {
   // Handle form submission
   const handleCompare = async (e) => {
     e.preventDefault();
+    // Remove all cache for testing
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.clear();
+    }
     setLoading(true);
     setResults([]);
     setChannelVideos({});
@@ -129,6 +134,11 @@ export default function Compare() {
     return allVideos;
   };
 
+  // Add sleep helper
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   // Handler for Analyze button
   const handleAnalyze = async () => {
     setShowAnalysis(true);
@@ -147,7 +157,7 @@ export default function Compare() {
 
     for (let i = 0; i < videoChunks.length; i++) {
       const chunk = videoChunks[i];
-      const prompt = `You are a YouTube channel analyst. Given the following video data (title, description, stats), analyze:\n1. Which type of video is working best (trending)?\n2. Which type is gaining reach?\n3. Which type is gaining attention (engagement)?\n\nVideo data:\n${chunk.map(v => `Title: ${v.snippet.title}\nDescription: ${v.snippet.description || ''}\nViews: ${v.statistics?.viewCount || 0}\nLikes: ${v.statistics?.likeCount || 0}\nComments: ${v.statistics?.commentCount || 0}`).join('\n---\n')}`;
+      const prompt = `You are a YouTube channel analyst. Given the following video data (title, description, stats), analyze:\n1. Which type of video is working best (trending)?\n2. Which type is gaining reach?\n3. Which type is gaining attention (engagement)?\n4. Suggest 10 new video topics that should gain user attention based on the trends and channel's content.\n\nPlease output your answer in two sections:\n- Trends & Insights: A short summary and bullet points.\n- Top 10 Video Topic Suggestions: A numbered list of 10 specific, catchy video titles.\n\nVideo data:\n${chunk.map(v => `Title: ${v.snippet.title}\nDescription: ${v.snippet.description || ''}\nViews: ${v.statistics?.viewCount || 0}\nLikes: ${v.statistics?.likeCount || 0}\nComments: ${v.statistics?.commentCount || 0}`).join('\n---\n')}`;
 
       try {
         const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -169,6 +179,11 @@ export default function Compare() {
         chunkResults.push(data.choices?.[0]?.message?.content || '');
       } catch (err) {
         chunkResults.push('Failed to analyze this chunk.');
+      }
+
+      // Add a delay between requests to avoid rate limit
+      if (i < videoChunks.length - 1) {
+        await sleep(1200); // 1.2 seconds
       }
     }
 
@@ -431,14 +446,15 @@ export default function Compare() {
             </div>
             {showAnalysis && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-                <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full p-8 relative">
+                <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full p-8 relative border border-blue-700">
                   <button
                     className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold"
                     onClick={() => setShowAnalysis(false)}
+                    aria-label="Close analysis modal"
                   >
                     &times;
                   </button>
-                  <h2 className="text-2xl font-bold mb-4 text-center bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                  <h2 className="text-3xl font-extrabold mb-6 text-center bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent tracking-tight">
                     Channel Trends & Suggestions
                   </h2>
                   {analysisLoading ? (
@@ -449,7 +465,7 @@ export default function Compare() {
                       </svg>
                     </div>
                   ) : (
-                    <pre className="whitespace-pre-wrap text-gray-200 text-base max-h-[60vh] overflow-y-auto">{analysisResult}</pre>
+                    <AnalysisResultDisplay result={analysisResult} />
                   )}
                 </div>
               </div>
@@ -480,6 +496,83 @@ export default function Compare() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// Professional display for analysis result
+function AnalysisResultDisplay({ result }) {
+  if (!result) return null;
+  const lines = result.split('\n').map(l => l.trim());
+  let trends = [];
+  let suggestions = [];
+  let inTrends = false;
+  let inSuggestions = false;
+
+  lines.forEach(line => {
+    if (/suggest/i.test(line)) {
+      inTrends = false;
+      inSuggestions = true;
+      return;
+    }
+    if (/trend|working|reach|attention|engagement/i.test(line)) {
+      inTrends = true;
+      inSuggestions = false;
+      return;
+    }
+    if (inTrends && line) trends.push(line.replace(/^[-*\d.]+\s*/, ''));
+    if (inSuggestions && line) {
+      if (/^\d+\./.test(line) || /^[-*]/.test(line) || /^\*\*/.test(line)) {
+        suggestions.push(line.replace(/^[-*\d.]+\s*/, ''));
+      }
+    }
+  });
+
+  // If no suggestions found, scan all lines for suggestion-like lines
+  if (suggestions.length === 0) {
+    suggestions = lines.filter(line =>
+      /^\d+\./.test(line) || /^[-*]/.test(line) || /^\*\*/.test(line)
+    ).map(line => line.replace(/^[-*\d.]+\s*/, ''));
+  }
+
+  // Remove duplicates and empty lines
+  suggestions = suggestions.filter((s, i, arr) => s && arr.indexOf(s) === i && !/suggest/i.test(s));
+
+  if (trends.length === 0 && suggestions.length === 0) {
+    return (
+      <div className="text-gray-200 text-base max-h-[60vh] overflow-y-auto whitespace-pre-line">
+        {result}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 text-gray-200 max-h-[60vh] overflow-y-auto">
+      {trends.length > 0 && (
+        <div>
+          <h3 className="text-xl font-bold mb-2 text-blue-400">Trends & Insights</h3>
+          <ul className="list-disc pl-6 space-y-1">
+            {trends.map((t, i) => (
+              <li key={i} className="leading-relaxed">{t}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {suggestions.length > 0 && (
+        <div>
+          <h3 className="text-xl font-bold mb-2 text-purple-400">Top 10 Video Topic Suggestions</h3>
+          <ol className="list-decimal pl-6 space-y-2">
+            {suggestions.map((s, i) => (
+              <li key={i} className="leading-relaxed">
+                <ReactMarkdown components={{
+                  strong: ({node, ...props}) => <span className="font-bold text-blue-300" {...props} />,
+                  em: ({node, ...props}) => <span className="italic text-purple-300" {...props} />
+                }}>{s}</ReactMarkdown>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
     </div>
   );
 }
