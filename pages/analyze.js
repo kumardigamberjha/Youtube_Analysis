@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { pendingRequests } from '../lib/cache';
+import { pendingRequests, getCachedData, saveToCache } from '../lib/cache';
 
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 
