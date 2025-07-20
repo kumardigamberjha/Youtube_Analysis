@@ -1,7 +1,26 @@
 import { useState, useEffect } from 'react';
-import { getCachedData, saveToCache, cleanupOldCache } from '../lib/cache';
+import { pendingRequests } from '../lib/cache';
 
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+
+// Function to clear old cache entries from localStorage
+function clearOldCache() {
+  const now = new Date();
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('yt_analyzer_')) {
+      try {
+        const item = JSON.parse(localStorage.getItem(key));
+        const cacheTime = new Date(item.timestamp);
+        if (now.getTime() - cacheTime.getTime() > 24 * 60 * 60 * 1000) {
+          localStorage.removeItem(key);
+        }
+      } catch (e) {
+        // If entry is invalid, remove it
+        localStorage.removeItem(key);
+      }
+    }
+  });
+}
 
 // Helper to extract channel ID from input (URL or direct ID)
 function extractChannelId(input) {
@@ -83,17 +102,24 @@ export default function Analyze() {
     live: [] // Added live/upcoming streams category
   });
 
-  // Clean up old cache files when component mounts
+  // Clean up old cache entries and pending requests when component mounts/unmounts
   useEffect(() => {
-    const cleanup = async () => {
-      try {
-        await cleanupOldCache();
-      } catch (error) {
-        console.error('Error cleaning up cache:', error);
+    // Clean up old cache entries from localStorage
+    try {
+      clearOldCache();
+    } catch (error) {
+      console.error('Error cleaning up localStorage cache:', error);
+    }
+
+    // Cleanup function to clear pending requests on unmount or channel change
+    return () => {
+      if (currentChannelId) {
+        pendingRequests.delete(currentChannelId);
+        pendingRequests.delete(`${currentChannelId}_videos`);
+        pendingRequests.delete(`channel_id_${currentChannelId}`);
       }
     };
-    cleanup();
-  }, []);
+  }, [currentChannelId]);
 
   // Categorize videos when videos array changes
   useEffect(() => {
@@ -131,27 +157,79 @@ export default function Analyze() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent duplicate submissions while loading
+    if (loading) return;
+    
+    const channelIdOrName = extractChannelId(input.trim());
+    console.log('Extracted channel ID/name:', channelIdOrName);
+    
+    // Check for any pending requests for this channel
+    const isPending = Array.from(pendingRequests.keys()).some(key => {
+      try {
+        return key.includes(channelIdOrName) || channelIdOrName.includes(key);
+      } catch (e) {
+        return false;
+      }
+    });
+
+    if (isPending) {
+      console.log('Request already in progress for channel:', channelIdOrName);
+      return;
+    }
+
+    // Reset states before starting
     setError('');
     setChannel(null);
     setVideos([]);
     setSelectedVideo(null);
     setLoading(true);
     setSubmitted(input);
-    
-    const channelIdOrName = extractChannelId(input.trim());
-    console.log('Extracted channel ID/name:', channelIdOrName);
     setCurrentChannelId(channelIdOrName);
     
+    // Add to pending requests with timestamp
+    const requestKey = `${channelIdOrName}_${Date.now()}`;
+    pendingRequests.set(requestKey, true);
+
     try {
-      // Check cache first
-      const cachedData = await getCachedData(channelIdOrName);
-      if (cachedData?.channel && cachedData?.videos) {
-        console.log('Using cached data for channel:', channelIdOrName);
-        setChannel(cachedData.channel);
-        setVideos(cachedData.videos);
-        setNextPageToken(cachedData.nextPageToken || '');
-        setLoading(false);
-        return;
+      // Check all possible cache keys
+      const possibleKeys = [
+        `yt_analyzer_${channelIdOrName}`,
+        `yt_analyzer_UC${channelIdOrName}`, // For partial channel IDs
+        ...Object.keys(localStorage).filter(key => 
+          key.startsWith('yt_analyzer_') && 
+          localStorage.getItem(key).includes(channelIdOrName)
+        )
+      ];
+
+      // Try to find valid cache
+      for (const key of possibleKeys) {
+        const cachedDataStr = localStorage.getItem(key);
+        if (cachedDataStr) {
+          try {
+            const cachedData = JSON.parse(cachedDataStr);
+            const cacheTime = new Date(cachedData.timestamp);
+            const now = new Date();
+            
+            // Check if cache is less than 24 hours old
+            if (now.getTime() - cacheTime.getTime() < 24 * 60 * 60 * 1000) {
+              console.log('Using cached data from key:', key);
+              setChannel(cachedData.data.channel);
+              setVideos(cachedData.data.videos);
+              setAnalysis(cachedData.data.analysis || null);
+              setNextPageToken(cachedData.data.nextPageToken || '');
+              setLoading(false);
+              pendingRequests.delete(channelIdOrName);
+              return;
+            } else {
+              console.log('Cache expired for key:', key);
+              localStorage.removeItem(key);
+            }
+          } catch (e) {
+            console.error('Error parsing cache for key:', key, e);
+            localStorage.removeItem(key);
+          }
+        }
       }
 
       // If no cache, fetch from API
@@ -160,6 +238,9 @@ export default function Analyze() {
       // Try searching by channel ID first
       let url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&id=${channelIdOrName}&key=${YOUTUBE_API_KEY}`;
       let res = await fetch(url);
+      if (!res.ok) {
+        throw new Error('Failed to fetch channel data');
+      }
       let data = await res.json();
       console.log('Channel API response:', data);
       
@@ -196,6 +277,7 @@ export default function Analyze() {
       if (!channelData) {
         setError('Channel not found. Please check the URL or ID.');
         setLoading(false);
+        pendingRequests.delete(channelIdOrName);
         return;
       }
 
@@ -214,6 +296,7 @@ export default function Analyze() {
       if (!playlistId) {
         setError('Could not find uploads playlist for this channel.');
         setLoading(false);
+        pendingRequests.delete(channelIdOrName);
         return;
       }
 
@@ -225,6 +308,7 @@ export default function Analyze() {
       if (!data.items) {
         setError('Could not fetch videos for this channel.');
         setLoading(false);
+        pendingRequests.delete(channelIdOrName);
         return;
       }
 
@@ -236,6 +320,7 @@ export default function Analyze() {
       if (!videoIds) {
         setError('Could not process video IDs.');
         setLoading(false);
+        pendingRequests.delete(channelIdOrName);
         return;
       }
       url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoIds}&key=${YOUTUBE_API_KEY}`;
@@ -243,27 +328,60 @@ export default function Analyze() {
       const videosData = await res.json();
       const videos = videosData?.items || [];
 
-      // Save to cache
+      // Save to localStorage with all relevant identifiers
       const cacheData = {
-        channel: channelData,
-        videos: videos,
-        nextPageToken: data.nextPageToken || ''
+        data: {
+          channel: channelData,
+          videos: videos,
+          nextPageToken: data.nextPageToken || '',
+          searchIdentifiers: [
+            channelIdOrName,
+            channelData.id,
+            channelData.snippet?.customUrl,
+            `@${channelData.snippet?.customUrl}`
+          ].filter(Boolean)
+        },
+        timestamp: new Date().toISOString()
       };
       
       try {
-        await saveToCache(channelData.id, cacheData); // Use channelData.id instead of channelIdOrName
-        console.log('Cache saved for channel:', channelData.id);
+        // Save with the canonical channel ID
+        const cacheKey = `yt_analyzer_${channelData.id}`;
+        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        console.log('Cache saved to localStorage with key:', cacheKey);
+        
+        // Clear any old caches for this channel using different keys
+        Object.keys(localStorage)
+          .filter(key => key.startsWith('yt_analyzer_') && key !== cacheKey)
+          .forEach(key => {
+            try {
+              const data = JSON.parse(localStorage.getItem(key));
+              if (data?.data?.channel?.id === channelData.id) {
+                localStorage.removeItem(key);
+              }
+            } catch (e) {}
+          });
       } catch (error) {
-        console.error('Error saving cache:', error);
+        console.error('Error saving to localStorage:', error);
+        // If localStorage is full, clear old items
+        try {
+          clearOldCache();
+          localStorage.setItem(`yt_analyzer_${channelData.id}`, JSON.stringify(cacheData));
+        } catch (e) {
+          console.error('Failed to save even after clearing cache:', e);
+        }
       }
 
       setChannel(channelData);
       setVideos(videos);
       setLoading(false);
+      pendingRequests.delete(channelIdOrName);
+
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Failed to fetch channel or video data.');
       setLoading(false);
+      pendingRequests.delete(channelIdOrName);
     }
   };
 
@@ -612,6 +730,16 @@ export default function Analyze() {
                   setIsAnalyzing(true);
                   setError('');
                   try {
+                    // Check if analysis is already cached
+                    const cachedData = await getCachedData(currentChannelId);
+                    if (cachedData?.analysis) {
+                      console.log('Using cached analysis for channel:', currentChannelId);
+                      setAnalysis(cachedData.analysis);
+                      setShowAnalysis(true);
+                      setIsAnalyzing(false);
+                      return;
+                    }
+
                     console.log('Starting channel analysis...');
                     const response = await fetch('/api/analyze-channel', {
                       method: 'POST',
@@ -637,6 +765,15 @@ export default function Analyze() {
                     console.log('Analysis completed:', data);
                     setAnalysis(data);
                     setShowAnalysis(true);
+
+                    // Save the analysis to cache
+                    const updatedCacheData = {
+                      channel,
+                      videos,
+                      analysis: data,
+                      nextPageToken: nextPageToken || ''
+                    };
+                    await saveToCache(currentChannelId, updatedCacheData);
                   } catch (err) {
                     console.error('Error analyzing channel:', err);
                     setError(err.message || 'Failed to analyze channel. Please try again.');
