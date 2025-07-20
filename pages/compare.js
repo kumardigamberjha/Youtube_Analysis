@@ -188,7 +188,18 @@ export default function Compare() {
     }
 
     // 2. Summarize all chunk results and generate 10 video topic suggestions
-    const summaryPrompt = `Given the following analyses of YouTube video data chunks, summarize the overall trends and suggest 10 new video topics that should gain user attention:\n\n${chunkResults.join('\n---\n')}`;
+    // Remove empty or failed chunk results
+    const validChunkResults = chunkResults.filter(
+      res => res && !/failed to analyze/i.test(res) && !/no analysis result/i.test(res)
+    );
+
+    if (validChunkResults.length === 0) {
+      setAnalysisResult('Sorry, no valid analysis could be generated from your video data. Please try again or check your API limits.');
+      setAnalysisLoading(false);
+      return;
+    }
+
+    const summaryPrompt = `Given the following analyses of YouTube video data chunks, summarize the overall trends and suggest 10 new video topics that should gain user attention:\n\n${validChunkResults.join('\n---\n')}`;
 
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
