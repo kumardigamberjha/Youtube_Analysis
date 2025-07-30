@@ -1,57 +1,11 @@
-import { getYouTubeTrendingTopics, analyzeCompetitorTopics } from '../../lib/trends';
+import { getYouTubeTrendingTopics, analyzeCompetitorTopics, getTopicScore } from '../../lib/trends';
 import { getVideoOptimization } from '../../lib/videoOptimizer';
 import { getRealTimeTrends } from '../../lib/realTimeTrends';
 import { getDetailedCategoryAnalysis } from '../../lib/categoryAnalysis';
 import { getEnhancedGeoAnalysis } from '../../lib/geoAnalysis';
 import { getEnhancedTrendPredictions } from '../../lib/trendPrediction';
 
-// Rate limiting configuration
-const REQUESTS = new Map();
-const MAX_REQUESTS_PER_MINUTE = parseInt(process.env.MAX_REQUESTS_PER_MINUTE || '60', 10);
-const WINDOW_MS = 60 * 1000; // 1 minute
-
-function checkRateLimit(ip) {
-    const now = Date.now();
-    const userRequests = REQUESTS.get(ip) || [];
-    const windowRequests = userRequests.filter(time => time > now - WINDOW_MS);
-    
-    if (windowRequests.length >= MAX_REQUESTS_PER_MINUTE) {
-        return false;
-    }
-    
-    windowRequests.push(now);
-    REQUESTS.set(ip, windowRequests);
-    return true;
-}
-
-// Validate environment variables
-function validateEnv() {
-    const requiredEnvVars = ['YOUTUBE_API_KEY'];
-    const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-    
-    if (missingVars.length > 0) {
-        throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
-    }
-}
-
 export default async function handler(req, res) {
-    // Validate environment variables
-    try {
-        validateEnv();
-    } catch (error) {
-        console.error('Environment validation failed:', error);
-        return res.status(500).json({ 
-            message: 'Server configuration error',
-            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-        });
-    }
-
-    // Rate limiting
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    if (!checkRateLimit(clientIp)) {
-        return res.status(429).json({ message: 'Too many requests. Please try again later.' });
-    }
-
     if (req.method !== 'POST') {
         return res.status(405).json({ message: 'Method not allowed' });
     }
@@ -62,26 +16,20 @@ export default async function handler(req, res) {
         // Validate time range
         const validTimeRanges = ['1h', '24h', '7d', '30d', '90d'];
         if (!validTimeRanges.includes(timeRange)) {
-            return res.status(400).json({
-                message: 'Invalid time range. Must be one of: ' + validTimeRanges.join(', ')
+            return res.status(400).json({ 
+                message: 'Invalid time range. Must be one of: ' + validTimeRanges.join(', ') 
             });
         }
 
-        // Fetch base data: trending topics and competitor analysis
-        let trendingTopics = [];
-        let competitorAnalysis = [];
-        try {
-            [trendingTopics, competitorAnalysis] = await Promise.all([
-                getYouTubeTrendingTopics(timeRange),
-                competitorChannels?.length > 0 ? analyzeCompetitorTopics(competitorChannels) : Promise.resolve([])
-            ]);
-        } catch (error) {
-            console.error('Error fetching base data:', error);
-        }
-        trendingTopics = Array.isArray(trendingTopics) ? trendingTopics : [];
-        competitorAnalysis = Array.isArray(competitorAnalysis) ? competitorAnalysis : [];
+        // Get trending topics and competitor analysis
+        const [trendingTopics, competitorAnalysis] = await Promise.all([
+            getYouTubeTrendingTopics(timeRange).catch(() => []),
+            competitorChannels?.length > 0
+                ? analyzeCompetitorTopics(competitorChannels).catch(() => [])
+                : Promise.resolve([])
+        ]);
 
-        // Topic-specific analyses
+        // Get topic-specific analyses
         let topicAnalyses = {
             videoOptimization: null,
             realTimeTrends: null,
@@ -91,43 +39,33 @@ export default async function handler(req, res) {
         };
 
         if (topic) {
-            try {
-                const [videoOpt, realTrends, categories, geo, predictions] = await Promise.all([
-                    getVideoOptimization(topic, timeRange).catch(() => null),
-                    getRealTimeTrends(topic).catch(() => null),
-                    getDetailedCategoryAnalysis(topic).catch(() => null),
-                    getEnhancedGeoAnalysis(topic).catch(() => null),
-                    getEnhancedTrendPredictions(topic).catch(() => null)
-                ]);
-                topicAnalyses = {
-                    videoOptimization: videoOpt,
-                    realTimeTrends: realTrends,
-                    categoryAnalysis: categories,
-                    geoAnalysis: geo,
-                    trendPredictions: predictions
-                };
-            } catch (error) {
-                console.error('Error fetching topic analyses:', error);
-            }
-        }
+            const [videoOpt, realTrends, categories, geo, predictions] = await Promise.all([
+                getVideoOptimization(topic, timeRange).catch(() => null),
+                getRealTimeTrends(topic).catch(() => null),
+                getDetailedCategoryAnalysis(topic).catch(() => null),
+                getEnhancedGeoAnalysis(topic).catch(() => null),
+                getEnhancedTrendPredictions(topic).catch(() => null)
+            ]);
 
-
-        // If trendingTopics is empty, use realTimeTrends.trendingNow as fallback
-        let trendingTopicsToSend = trendingTopics.slice(0, 20);
-        if (trendingTopicsToSend.length === 0 && topicAnalyses.realTimeTrends && Array.isArray(topicAnalyses.realTimeTrends.trendingNow)) {
-            trendingTopicsToSend = topicAnalyses.realTimeTrends.trendingNow.slice(0, 20);
+            topicAnalyses = {
+                videoOptimization: videoOpt,
+                realTimeTrends: realTrends,
+                categoryAnalysis: categories,
+                geoAnalysis: geo,
+                trendPredictions: predictions
+            };
         }
 
         const insights = {
             timeRange,
-            trendingTopics: trendingTopicsToSend,
+            trendingTopics: trendingTopics.slice(0, 20),
             competitorAnalysis: competitorAnalysis.slice(0, 50),
             videoOptimization: topicAnalyses.videoOptimization ? {
-                titleSuggestions: topicAnalyses.videoOptimization.titleSuggestions || [],
-                descriptionTemplate: topicAnalyses.videoOptimization.descriptionTemplate || '',
-                recommendedTags: topicAnalyses.videoOptimization.recommendedTags || [],
-                engagement: topicAnalyses.videoOptimization.engagement || {},
-                aidaScript: topicAnalyses.videoOptimization.aidaScript || '',
+                titleSuggestions: topicAnalyses.videoOptimization.titleSuggestions,
+                descriptionTemplate: topicAnalyses.videoOptimization.descriptionTemplate,
+                recommendedTags: topicAnalyses.videoOptimization.recommendedTags,
+                engagement: topicAnalyses.videoOptimization.engagement,
+                aidaScript: topicAnalyses.videoOptimization.aidaScript,
                 competitorInsights: topicAnalyses.videoOptimization.competitorInsights
             } : null,
             realTimeTrends: topicAnalyses.realTimeTrends ? {
@@ -141,7 +79,10 @@ export default async function handler(req, res) {
                 searchVolume: topicAnalyses.realTimeTrends.searchVolume
             } : null,
             categoryAnalysis: topicAnalyses.categoryAnalysis ? {
-                detailedInsights: topicAnalyses.categoryAnalysis
+                detailedInsights: topicAnalyses.categoryAnalysis,
+                crossCategoryTrends: analyzeCrossCategories(topicAnalyses.categoryAnalysis),
+                nichePotential: calculateNichePotential(topicAnalyses.categoryAnalysis),
+                contentStrategy: generateCategoryStrategy(topicAnalyses.categoryAnalysis)
             } : null,
             geoAnalysis: topicAnalyses.geoAnalysis ? {
                 regionalInsights: topicAnalyses.geoAnalysis.regionalAnalysis,
@@ -163,7 +104,7 @@ export default async function handler(req, res) {
                 actionable: topicAnalyses.trendPredictions.actionableInsights
             } : null,
             recommendations: generateEnhancedRecommendations(
-                trendingTopicsToSend,
+                trendingTopics,
                 competitorAnalysis,
                 topicAnalyses.videoOptimization
             )
@@ -172,7 +113,7 @@ export default async function handler(req, res) {
         res.status(200).json(insights);
     } catch (error) {
         console.error('Error in trend analysis:', error);
-        res.status(500).json({
+        res.status(500).json({ 
             message: 'Error analyzing trends',
             error: error.message
         });
@@ -182,11 +123,14 @@ export default async function handler(req, res) {
 function generateEnhancedRecommendations(trendingTopics, competitorAnalysis, videoOptimization) {
     try {
         const recommendations = [];
+
+        // Find trending topics that competitors haven't covered
         const competitorTopics = new Set(
             (Array.isArray(competitorAnalysis) ? competitorAnalysis : [])
                 .filter(item => item?.topic)
                 .map(item => item.topic.toLowerCase())
         );
+
         const untappedTrends = (Array.isArray(trendingTopics) ? trendingTopics : [])
             .filter(item => item?.topic && !competitorTopics.has(item.topic.toLowerCase()));
 
@@ -198,6 +142,7 @@ function generateEnhancedRecommendations(trendingTopics, competitorAnalysis, vid
             });
         }
 
+        // Find highly engaging competitor topics
         const competitorList = Array.isArray(competitorAnalysis) ? competitorAnalysis : [];
         const popularCompetitorTopics = competitorList
             .filter(item => item?.frequency >= 3)
@@ -211,9 +156,10 @@ function generateEnhancedRecommendations(trendingTopics, competitorAnalysis, vid
             });
         }
 
+        // Add video optimization recommendations if available
         if (videoOptimization?.competitorInsights) {
             const { competitorInsights, engagement } = videoOptimization;
-
+            
             recommendations.push({
                 type: 'optimization',
                 message: 'Video Optimization Tips:',
