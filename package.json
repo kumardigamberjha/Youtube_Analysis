@@ -9,12 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "axios": "^1.11.0",
+    "firebase": "^12.0.0",
     "fs": "^0.0.1-security",
+    "google-trends-api": "^4.9.2",
+    "googleapis": "^154.0.0",
     "groq-sdk": "^0.27.0",
     "lucide-react": "^0.525.0",
     "next": "15.4.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-firebase-hooks": "^5.1.1",
     "react-markdown": "^10.1.0"
   },
   "devDependencies": {
