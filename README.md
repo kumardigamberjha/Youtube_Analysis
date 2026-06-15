@@ -1,40 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# YouTube Analytics
 
-## Getting Started
+A [Next.js](https://nextjs.org) app for exploring and comparing YouTube channels and discovering trends. Search channels, run AI-assisted analysis on a single channel, compare multiple channels side by side, browse trending topics, and save comparisons to Google Sheets — with Google sign-in backed by Firebase.
 
-First, run the development server:
+## Features
+
+- **Channel search & analysis** — look up channels and get AI-generated summaries of their performance.
+- **Channel comparison** — compare multiple channels and let an LLM highlight differences.
+- **Trends** — explore trending videos/topics with caching to stay within API quotas.
+- **AI summaries** — powered by [Groq](https://groq.com).
+- **Google sign-in** — authentication via Firebase Auth.
+- **Save to Google Sheets** — persist comparison results to a spreadsheet.
+
+## Tech stack
+
+- **Framework:** Next.js 15 (Pages Router), React 19
+- **Styling:** Tailwind CSS
+- **Auth & data:** Firebase (Auth + Firestore)
+- **APIs:** YouTube Data API v3 (`googleapis`), Google Sheets API (`gapi`)
+- **AI:** Groq SDK
+- **HTTP:** axios
+
+## Getting started
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Configure environment variables
+cp .env.example .env.local
+# then edit .env.local and fill in your keys (see the table below)
+
+# 3. Run the dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+Copy `.env.example` to `.env.local` and fill in the values. `.env.local` is gitignored and must never be committed.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+| Variable | Required | Where to get it |
+|----------|----------|-----------------|
+| `NEXT_PUBLIC_YOUTUBE_API_KEY` / `YOUTUBE_API_KEY` | Yes | [Google Cloud Console](https://console.cloud.google.com/) — enable **YouTube Data API v3**. Set both to the same key (one is used client-side, one server-side). |
+| `NEXT_PUBLIC_GROQ_API_KEY` / `GROQ_API_KEY` / `groq_api_key` | Yes | [Groq console](https://console.groq.com/keys). The code references the key under three names — set all three to the same value. |
+| `NEXT_PUBLIC_GROQ_MODEL` / `groq_api_model` / `QWEN_MODEL_ID` | No | Groq model ids; defaults are provided in code. |
+| `NEXT_PUBLIC_FIREBASE_*` (`API_KEY`, `AUTH_DOMAIN`, `PROJECT_ID`, `STORAGE_BUCKET`, `MESSAGING_SENDER_ID`, `APP_ID`, `MEASUREMENT_ID`) | Yes | [Firebase console](https://console.firebase.google.com/) → Project settings → Your apps → Web app config. |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | For Sheets | Google Cloud Console → OAuth 2.0 **Web** client ID. |
+| `NEXT_PUBLIC_GOOGLE_SHEET_ID` | For Sheets | The ID of the spreadsheet comparisons are appended to. |
+| `MAX_REQUESTS_PER_MINUTE` | No | Rate limit for the trends API route (default `60`). |
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+> **Security note:** Earlier revisions of this repo committed the Firebase web config and Google OAuth client ID directly in source. They have since been moved to environment variables. If you treat any of those values as sensitive, rotate them in the Google/Firebase consoles, since they remain in git history.
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+pages/         # Routes: index, search, analyze, compare, trends, videos, searches
+pages/api/     # API routes: channel analysis, comparison, trends, cache
+lib/           # YouTube/trends helpers, Firebase init, Sheets client, caching
+components/    # Nav, Google auth, protected route, debug helpers
+contexts/      # AuthContext (auth state)
+scripts/       # Maintenance scripts (e.g. cache checks)
+styles/        # Global + module CSS
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start the dev server (Turbopack). |
+| `npm run build` | Production build. |
+| `npm run start` | Run the production build. |
+| `npm run lint` | Lint with Next.js ESLint. |
