@@ -12,13 +12,11 @@ export default function Home() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
 
-      <h1>Hello js</h1>
-
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
       {/* Floating Particles */}
@@ -41,16 +39,16 @@ export default function Home() {
         {/* Header Section */}
         <div className="text-center mb-16">
           {/* YouTube Icon with Glow Effect */}
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r from-red-500 to-red-600 shadow-2xl shadow-red-500/50 mb-8 animate-pulse">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 shadow-2xl shadow-blue-500/50 mb-8 animate-pulse">
             <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="currentColor">
               <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
             </svg>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 mb-6 drop-shadow-2xl leading-tight">
+          <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-200 to-purple-200 mb-6 drop-shadow-2xl leading-tight">
             YouTube Competitor
             <br />
-            <span className="text-4xl md:text-6xl bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
+            <span className="text-4xl md:text-6xl bg-gradient-to-r from-blue-400 via-purple-400 to-purple-500 bg-clip-text text-transparent">
               Analysis Tool
             </span>
           </h1>
@@ -77,18 +75,18 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl mb-16">
           {/* Trends Analysis */}
           <Link href="/trends" className="group">
-            <div className="relative overflow-hidden bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-yellow-500/50 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-yellow-500/25">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative overflow-hidden bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-blue-500/50 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative z-10">
                 <div className="flex items-start gap-6 mb-6">
-                  <div className="p-4 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                  <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M3 17l6-6 4 4 8-8" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M21 21H3" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-yellow-300 transition-colors">
+                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors">
                       Trends Analysis
                     </h3>
                     <p className="text-gray-300 leading-relaxed">
@@ -97,9 +95,9 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  <span className="px-3 py-1 bg-yellow-500/20 text-yellow-700 rounded-full text-xs">Trending Topics</span>
-                  <span className="px-3 py-1 bg-yellow-500/20 text-yellow-700 rounded-full text-xs">Real-time Insights</span>
-                  <span className="px-3 py-1 bg-yellow-500/20 text-yellow-700 rounded-full text-xs">Content Strategy</span>
+                  <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Trending Topics</span>
+                  <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Real-time Insights</span>
+                  <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Content Strategy</span>
                 </div>
               </div>
             </div>
@@ -137,18 +135,18 @@ export default function Home() {
 
           {/* Compare Channels */}
           <Link href="/compare" className="group">
-            <div className="relative overflow-hidden bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-green-500/50 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/25">
-              <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative overflow-hidden bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-purple-500/50 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-violet-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               
               <div className="relative z-10">
                 <div className="flex items-start gap-6 mb-6">
-                  <div className="p-4 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                  <div className="p-4 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M17 20h5v-2a4 4 0 00-4-4h-1M7 20H2v-2a4 4 0 014-4h1m4-4V4m0 0L8 7m4-3l4 3" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-green-300 transition-colors">
+                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-purple-300 transition-colors">
                       Compare Channels
                     </h3>
                     <p className="text-gray-300 leading-relaxed">
@@ -158,9 +156,9 @@ export default function Home() {
                 </div>
                 
                 <div className="flex gap-2 flex-wrap">
-                  <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-xs">Head-to-Head</span>
-                  <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-xs">Market Share</span>
-                  <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-xs">Competitive Edge</span>
+                  <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs">Head-to-Head</span>
+                  <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs">Market Share</span>
+                  <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs">Competitive Edge</span>
                 </div>
               </div>
             </div>
@@ -199,18 +197,18 @@ export default function Home() {
 
           {/* Search Videos */}
           <Link href="/videos" className="group">
-            <div className="relative overflow-hidden bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-pink-500/50 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-pink-500/25">
-              <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative overflow-hidden bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 hover:border-blue-500/50 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               
               <div className="relative z-10">
                 <div className="flex items-start gap-6 mb-6">
-                  <div className="p-4 bg-gradient-to-r from-pink-500 to-pink-600 rounded-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                  <div className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M15 10l4.553-2.276A2 2 0 0021 6.382V5a2 2 0 00-2-2H5a2 2 0 00-2 2v1.382a2 2 0 001.447 1.342L9 10m6 0v10a2 2 0 01-2 2H7a2 2 0 01-2-2V10m10 0l-4 2-4-2" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-pink-300 transition-colors">
+                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors">
                       Search Videos
                     </h3>
                     <p className="text-gray-300 leading-relaxed">
@@ -220,9 +218,9 @@ export default function Home() {
                 </div>
                 
                 <div className="flex gap-2 flex-wrap">
-                  <span className="px-3 py-1 bg-pink-500/20 text-pink-300 rounded-full text-xs">Video Analytics</span>
-                  <span className="px-3 py-1 bg-pink-500/20 text-pink-300 rounded-full text-xs">Content Trends</span>
-                  <span className="px-3 py-1 bg-pink-500/20 text-pink-300 rounded-full text-xs">Performance Data</span>
+                  <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Video Analytics</span>
+                  <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Content Trends</span>
+                  <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Performance Data</span>
                 </div>
               </div>
             </div>

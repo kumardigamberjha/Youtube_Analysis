@@ -239,7 +239,12 @@ export default function Analyze() {
       let url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&id=${channelIdOrName}&key=${YOUTUBE_API_KEY}`;
       let res = await fetch(url);
       if (!res.ok) {
-        throw new Error('Failed to fetch channel data');
+        let apiMessage = '';
+        try {
+          const errBody = await res.json();
+          apiMessage = errBody?.error?.message || '';
+        } catch {}
+        throw new Error(apiMessage ? `YouTube API error: ${apiMessage}` : 'Failed to fetch channel data');
       }
       let data = await res.json();
       console.log('Channel API response:', data);
@@ -379,7 +384,7 @@ export default function Analyze() {
 
     } catch (err) {
       console.error('Error fetching data:', err);
-      setError('Failed to fetch channel or video data.');
+      setError(err?.message || 'Failed to fetch channel or video data.');
       setLoading(false);
       pendingRequests.delete(channelIdOrName);
     }
@@ -390,7 +395,7 @@ export default function Analyze() {
       <div className="container mx-auto px-4 py-16">
         {/* Header Section */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
             YouTube Channel Analyzer
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
@@ -404,14 +409,14 @@ export default function Analyze() {
             <input
               type="text"
               placeholder="Enter YouTube Channel URL, ID, or @handle"
-              className="w-full px-6 py-4 pr-32 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 text-lg placeholder-gray-500 transition-all duration-300"
+              className="w-full px-6 py-4 pr-32 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-lg placeholder-gray-500 transition-all duration-300"
               value={input}
               onChange={e => setInput(e.target.value)}
               required
             />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-6 py-2.5 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl font-semibold hover:from-red-700 hover:to-pink-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
               {loading ? (
@@ -455,7 +460,7 @@ export default function Analyze() {
                 <img
                   src={channel.snippet?.thumbnails?.high?.url || channel.snippet?.thumbnails?.default?.url}
                   alt={channel.snippet?.title}
-                  className="w-32 h-32 md:w-40 md:h-40 rounded-full ring-4 ring-red-500/50 shadow-xl mx-auto md:mx-0"
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-full ring-4 ring-blue-500/50 shadow-xl mx-auto md:mx-0"
                 />
                 <div className="flex-1 text-center md:text-left">
                   <h2 className="text-3xl font-bold mb-3">{channel.snippet?.title}</h2>
@@ -465,7 +470,7 @@ export default function Analyze() {
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-6 mb-6">
                     <div className="bg-gray-900/50 rounded-xl p-4">
-                      <div className="text-2xl font-bold text-red-400">
+                      <div className="text-2xl font-bold text-blue-400">
                         {Number(channel.statistics?.subscriberCount || 0).toLocaleString()}</div>
                       <div className="text-sm text-gray-500 uppercase tracking-wider">Subscribers</div>
                     </div>
@@ -487,7 +492,7 @@ export default function Analyze() {
                     href={`https://www.youtube.com/channel/${channel.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl font-semibold hover:from-red-700 hover:to-pink-700 transition-all duration-300"                  >
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300"                  >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                     </svg>
@@ -503,7 +508,7 @@ export default function Analyze() {
         {videos.length > 0 && (
           <div className="max-w-7xl mx-auto">
             <h3 className="text-3xl font-bold mb-8 text-center">
-              <span className="bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
                 Channel Videos
               </span>
             </h3>
@@ -523,7 +528,7 @@ export default function Analyze() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-300 ${
                       activeTab === tab.id
-                        ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white'
+                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
                         : 'text-gray-400 hover:text-white'
                     }`}
                   >
@@ -537,8 +542,8 @@ export default function Analyze() {
               {categorizedVideos[activeTab].filter(video => video && video.snippet).map(video => (
                 <div
                   key={video.id}
-                  className={`group bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl overflow-hidden hover:border-red-500/50 transition-all duration-300 cursor-pointer ${
-                    selectedVideo === video.id ? 'ring-2 ring-red-500' : ''
+                  className={`group bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl overflow-hidden hover:border-blue-500/50 transition-all duration-300 cursor-pointer ${
+                    selectedVideo === video.id ? 'ring-2 ring-blue-500' : ''
                   }`}
                   onClick={() => setSelectedVideo(selectedVideo === video.id ? null : video.id)}
                 >
@@ -554,7 +559,7 @@ export default function Analyze() {
                   
                   {/* Content */}
                   <div className="p-4">
-                    <h4 className="font-semibold text-lg mb-2 group-hover:text-red-400 transition-colors">
+                    <h4 className="font-semibold text-lg mb-2 group-hover:text-blue-400 transition-colors">
                       {video.snippet?.title || 'Untitled'}
                     </h4>
                     
@@ -655,7 +660,7 @@ export default function Analyze() {
                           href={`https://www.youtube.com/watch?v=${video.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block w-full text-center px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 rounded-lg font-medium hover:from-red-700 hover:to-pink-700 transition-all duration-300"
+                          className="block w-full text-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
                           onClick={(e) => e.stopPropagation()}
                         >
                           Watch on YouTube
@@ -707,7 +712,7 @@ export default function Analyze() {
                       setIsLoadingMore(false);
                     }
                   }}
-                  className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl font-semibold hover:from-red-700 hover:to-pink-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoadingMore}
                 >
                   {isLoadingMore ? (

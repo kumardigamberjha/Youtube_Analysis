@@ -72,7 +72,7 @@ export default async function handler(req, res) {
         let competitorAnalysis = [];
         try {
             [trendingTopics, competitorAnalysis] = await Promise.all([
-                getYouTubeTrendingTopics(timeRange),
+                getYouTubeTrendingTopics(timeRange, topic),
                 competitorChannels?.length > 0 ? analyzeCompetitorTopics(competitorChannels) : Promise.resolve([])
             ]);
         } catch (error) {

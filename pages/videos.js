@@ -60,7 +60,7 @@ export default function Videos() {
       <div className="container mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
             YouTube Video Search
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
@@ -76,12 +76,12 @@ export default function Videos() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Enter channel URL, @handle, or channel name"
-              className="w-full px-6 py-4 pr-32 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 text-lg placeholder-gray-500 transition-all duration-300"
+              className="w-full px-6 py-4 pr-32 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-lg placeholder-gray-500 transition-all duration-300"
               required
             />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-6 py-2.5 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl font-semibold hover:from-red-700 hover:to-pink-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               disabled={loading}
             >
               {loading ? (
@@ -121,7 +121,7 @@ export default function Videos() {
           <div className="flex flex-col items-center justify-center py-20">
             <div className="relative">
               <div className="w-20 h-20 border-4 border-gray-700 rounded-full"></div>
-              <div className="w-20 h-20 border-4 border-red-500 rounded-full animate-spin absolute top-0 left-0 border-t-transparent"></div>
+              <div className="w-20 h-20 border-4 border-blue-500 rounded-full animate-spin absolute top-0 left-0 border-t-transparent"></div>
             </div>
             <p className="text-gray-400 mt-4 text-lg">Fetching videos...</p>
           </div>
@@ -147,7 +147,7 @@ export default function Videos() {
               {videos.map((video, index) => (
                 <div
                   key={video.id}
-                  className="group bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden hover:ring-2 hover:ring-red-500/50 transition-all duration-300 hover:transform hover:scale-[1.02]"
+                  className="group bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden hover:ring-2 hover:ring-blue-500/50 transition-all duration-300 hover:transform hover:scale-[1.02]"
                   onMouseEnter={() => setHoveredVideo(video.id)}
                   onMouseLeave={() => setHoveredVideo(null)}
                   style={{
@@ -179,7 +179,7 @@ export default function Videos() {
 
                   {/* Video Info */}
                   <div className="p-4">
-                    <h3 className="font-semibold text-white line-clamp-2 mb-2 group-hover:text-red-400 transition-colors">
+                    <h3 className="font-semibold text-white line-clamp-2 mb-2 group-hover:text-blue-400 transition-colors">
                       {video.title}
                     </h3>
                     
@@ -200,7 +200,7 @@ export default function Videos() {
                         href={`https://youtube.com/watch?v=${video.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 bg-gradient-to-r from-red-600 to-pink-600 text-white text-center py-2 rounded-lg font-medium hover:from-red-700 hover:to-pink-700 transition-all duration-300 text-sm"
+                        className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-2 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 text-sm"
                       >
                         Watch Now
                       </a>

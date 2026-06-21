@@ -67,7 +67,7 @@ export default function Search() {
       <div className="container mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-green-500 to-teal-500 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
             Search YouTube Channels
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
@@ -78,19 +78,19 @@ export default function Search() {
         {/* Search Form */}
         <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-12">
           <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-green-600 to-teal-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
             <div className="relative flex">
               <input
                 type="text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder="Search by channel name, topic, or keyword..."
-                className="flex-1 px-6 py-4 bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-l-2xl focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 text-lg placeholder-gray-500 transition-all duration-300"
+                className="flex-1 px-6 py-4 bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-l-2xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-lg placeholder-gray-500 transition-all duration-300"
                 required
               />
               <button
                 type="submit"
-                className="px-8 py-4 bg-gradient-to-r from-green-600 to-teal-600 rounded-r-2xl font-semibold hover:from-green-700 hover:to-teal-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-r-2xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 disabled={loading}
               >
                 {loading ? (
@@ -141,8 +141,8 @@ export default function Search() {
               {results.map(channel => (
                 <div
                   key={channel.id || channel.id?.channelId}
-                  className={`group bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 hover:border-green-500/50 transition-all duration-300 cursor-pointer ${
-                    selectedChannel === (channel.id || channel.id?.channelId) ? 'ring-2 ring-green-500' : ''
+                  className={`group bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 hover:border-blue-500/50 transition-all duration-300 cursor-pointer ${
+                    selectedChannel === (channel.id || channel.id?.channelId) ? 'ring-2 ring-blue-500' : ''
                   }`}
                   onClick={() => setSelectedChannel(selectedChannel === (channel.id || channel.id?.channelId) ? null : (channel.id || channel.id?.channelId))}
                 >
@@ -153,7 +153,7 @@ export default function Search() {
                       className="w-16 h-16 rounded-full"
                     />
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-200 group-hover:text-green-400 transition-colors duration-300">
+                      <h3 className="text-lg font-semibold text-gray-200 group-hover:text-blue-400 transition-colors duration-300">
                         {channel.snippet?.title}
                       </h3>
                       <p className="text-sm text-gray-400 line-clamp-2 mt-1">
@@ -177,7 +177,7 @@ export default function Search() {
                   </div>
                   <a
                     href={`/analyze?id=${channel.id || channel.id?.channelId}`}
-                    className="mt-4 inline-flex items-center gap-2 text-sm text-green-500 hover:text-green-400 transition-colors duration-300"
+                    className="mt-4 inline-flex items-center gap-2 text-sm text-blue-400 hover:text-blue-400 transition-colors duration-300"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -211,7 +211,7 @@ export default function Search() {
                   <button
                     key={suggestion}
                     onClick={() => setInput(suggestion)}
-                    className="px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-sm hover:border-green-500/50 hover:text-green-400 transition-all duration-300"
+                    className="px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-sm hover:border-blue-500/50 hover:text-blue-400 transition-all duration-300"
                   >
                     {suggestion}
                   </button>
@@ -225,7 +225,7 @@ export default function Search() {
         {loading && (
           <div className="text-center py-16">
             <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-800/50 rounded-full mb-6">
-              <svg className="animate-spin h-12 w-12 text-green-500" viewBox="0 0 24 24">
+              <svg className="animate-spin h-12 w-12 text-blue-400" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>

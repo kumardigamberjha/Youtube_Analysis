@@ -1,4 +1,5 @@
-export default async function handler(req, res) {
+import { callAI } from '../../lib/aiClient';
+
   // Validate HTTP method
   if (req.method !== 'POST') {
     return res.status(405).json({ 
@@ -69,12 +70,12 @@ export default async function handler(req, res) {
     // Create an enhanced prompt with more context
     const prompt = createAnalysisPrompt(formattedData);
 
-    // Configure Groq API request with better parameters
-    const groqResponse = await callGroqAPI(prompt);
-    
-    if (!groqResponse.success) {
-      throw new Error(groqResponse.error || 'Failed to get AI analysis');
-    }
+    const aiResponse = await callAI(
+      'You are an expert YouTube analytics consultant with deep knowledge of content strategy, audience engagement, and platform algorithms. Provide detailed, actionable insights in well-structured JSON format.',
+      prompt
+    );
+    const groqResponse = { success: true, data: aiResponse.text };
+    console.log(`[analyze-compare] provider: ${aiResponse.provider}`);
 
     // Process and validate the AI response
     const analysis = processAIResponse(groqResponse.data);
@@ -86,7 +87,7 @@ export default async function handler(req, res) {
       channelsAnalyzed: formattedData.length,
       analysis,
       metadata: {
-        model: process.env.QWEN_MODEL_ID || 'qwen-default',
+        model: aiResponse.provider,
         processingTime: Date.now() - req.startTime || 0
       }
     };
@@ -212,49 +213,8 @@ Please provide a detailed JSON analysis with the following structure:
 }`;
 }
 
-async function callGroqAPI(prompt) {
-  try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: process.env.QWEN_MODEL_ID || 'mixtral-8x7b-32768',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are an expert YouTube analytics consultant with deep knowledge of content strategy, audience engagement, and platform algorithms. Provide detailed, actionable insights in well-structured JSON format.' 
-          },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 4096,
-        temperature: 0.7,
-        top_p: 0.9,
-        frequency_penalty: 0.3,
-        presence_penalty: 0.3
-      })
-    });
+// callGroqAPI removed — use callAI from aiClient.js instead
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Groq API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
-    }
-
-    const data = await response.json();
-    return {
-      success: true,
-      data: data.choices?.[0]?.message?.content || ''
-    };
-  } catch (error) {
-    console.error('Groq API call failed:', error);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-}
 
 function processAIResponse(aiOutput) {
   if (!aiOutput) {
@@ -404,11 +364,14 @@ ${formattedData.map(ch => `${ch.name}: ${ch.subscribers} subs, ${ch.views} views
 
 Provide a simple comparison focusing on size, engagement, and growth potential.`;
 
-    const response = await callGroqAPI(simplePrompt);
-    if (response.success) {
+    const aiResponse = await callAI(
+      'You are a YouTube analytics expert.',
+      simplePrompt
+    );
+    if (aiResponse.text) {
       return {
         ...getDefaultAnalysis(),
-        executiveSummary: response.data,
+        executiveSummary: aiResponse.text,
         simplified: true,
         recoveryMode: true
       };

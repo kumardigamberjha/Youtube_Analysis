@@ -1,9 +1,5 @@
-import { Groq } from 'groq-sdk';
+import { callAI } from '../../lib/aiClient';
 import { saveToCache, getFromCache, cleanCache } from '../../lib/server-cache';
-
-const groq = new Groq({
-  apiKey: process.env.groq_api_key,
-});
 
 // Helper function to chunk array into smaller pieces
 const chunkArray = (arr, size) => {
@@ -116,29 +112,13 @@ export default async function handler(req, res) {
           "postingPatterns": "brief pattern"
         }`;
 
-        const completion = await groq.chat.completions.create({
-          messages: [
-            {
-              role: "system",
-              content: "You are an expert YouTube content strategist and data analyst."
-            },
-            {
-              role: "user",
-              content: prompt
-            }
-          ],
-          model: "llama-3.1-8b-instant",
-          temperature: 0.7,
-          max_tokens: 2048
-        });
+        const { text: content } = await callAI(
+          'You are an expert YouTube content strategist and data analyst. Return only valid JSON.',
+          prompt
+        );
 
-        if (!completion.choices || completion.choices.length === 0) {
-          throw new Error('No response from Groq API');
-        }
-
-        const content = completion.choices[0]?.message?.content;
         if (!content) {
-          throw new Error('Empty response from Groq API');
+          throw new Error('Empty response from AI');
         }
 
         const chunkAnalysis = parseJsonContent(content);
@@ -180,23 +160,10 @@ export default async function handler(req, res) {
         ]
       }`;
 
-      const ideasCompletion = await groq.chat.completions.create({
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert YouTube content strategist and data analyst."
-          },
-          {
-            role: "user",
-            content: videoIdeasPrompt
-          }
-        ],
-        model: process.env.groq_api_model,
-        temperature: 0.7,
-        max_tokens: 2048
-      });
-
-      const ideasContent = ideasCompletion.choices[0]?.message?.content;
+      const { text: ideasContent } = await callAI(
+        'You are an expert YouTube content strategist and data analyst. Return only valid JSON.',
+        videoIdeasPrompt
+      );
       const parsedIdeas = ideasContent ? parseJsonContent(ideasContent) : null;
       
       const finalAnalysis = {

@@ -18,16 +18,6 @@ export default function Compare() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const analysisButtonRef = useRef();
 
-  const CHUNK_SIZE = 20;
-
-  function chunkArray(arr, size) {
-    const result = [];
-    for (let i = 0; i < arr.length; i += size) {
-      result.push(arr.slice(i, i + size));
-    }
-    return result;
-  }
-
   // Fetches channel videos (latest or popular)
   const fetchChannelVideos = async (channelId) => {
     try {
@@ -134,11 +124,6 @@ export default function Compare() {
     return allVideos;
   };
 
-  // Add sleep helper
-  function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
   // Handler for Analyze button
   const handleAnalyze = async () => {
     setShowAnalysis(true);
@@ -151,76 +136,39 @@ export default function Compare() {
       return;
     }
 
-    // 1. Split into chunks
-    const videoChunks = chunkArray(allVideos, CHUNK_SIZE);
-    let chunkResults = [];
+    // Single compact request: take the top ~40 videos by views and send only
+    // title + stats (no descriptions). This keeps the prompt to a few thousand
+    // tokens so one AI call comfortably fits inside every provider's free
+    // per-minute limit — no request burst, no rate-limit cascade.
+    const TOP_N = 40;
+    const topVideos = [...allVideos]
+      .sort((a, b) => Number(b.statistics?.viewCount || 0) - Number(a.statistics?.viewCount || 0))
+      .slice(0, TOP_N);
 
-    for (let i = 0; i < videoChunks.length; i++) {
-      const chunk = videoChunks[i];
-      const prompt = `You are a YouTube channel analyst. Given the following video data (title, description, stats), analyze:\n1. Which type of video is working best (trending)?\n2. Which type is gaining reach?\n3. Which type is gaining attention (engagement)?\n4. Suggest 10 new video topics that should gain user attention based on the trends and channel's content.\n\nPlease output your answer in two sections:\n- Trends & Insights: A short summary and bullet points.\n- Top 10 Video Topic Suggestions: A numbered list of 10 specific, catchy video titles.\n\nVideo data:\n${chunk.map(v => `Title: ${v.snippet.title}\nDescription: ${v.snippet.description || ''}\nViews: ${v.statistics?.viewCount || 0}\nLikes: ${v.statistics?.likeCount || 0}\nComments: ${v.statistics?.commentCount || 0}`).join('\n---\n')}`;
+    const videoLines = topVideos
+      .map(v => `${v.snippet?.title || 'Untitled'} — ${Number(v.statistics?.viewCount || 0).toLocaleString()} views, ${Number(v.statistics?.likeCount || 0).toLocaleString()} likes, ${Number(v.statistics?.commentCount || 0).toLocaleString()} comments`)
+      .join('\n');
 
-      try {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: process.env.NEXT_PUBLIC_GROQ_MODEL || 'llama3-70b-8192',
-            messages: [
-              { role: 'system', content: 'You are a YouTube channel analyst.' },
-              { role: 'user', content: prompt },
-            ],
-            max_tokens: 1024,
-          }),
-        });
-        const data = await res.json();
-        chunkResults.push(data.choices?.[0]?.message?.content || '');
-      } catch (err) {
-        chunkResults.push('Failed to analyze this chunk.');
-      }
-
-      // Add a delay between requests to avoid rate limit
-      if (i < videoChunks.length - 1) {
-        await sleep(1200); // 1.2 seconds
-      }
-    }
-
-    // 2. Summarize all chunk results and generate 10 video topic suggestions
-    // Remove empty or failed chunk results
-    const validChunkResults = chunkResults.filter(
-      res => res && !/failed to analyze/i.test(res) && !/no analysis result/i.test(res)
-    );
-
-    if (validChunkResults.length === 0) {
-      setAnalysisResult('Sorry, no valid analysis could be generated from your video data. Please try again or check your API limits.');
-      setAnalysisLoading(false);
-      return;
-    }
-
-    const summaryPrompt = `Given the following analyses of YouTube video data chunks, summarize the overall trends and suggest 10 new video topics that should gain user attention:\n\n${validChunkResults.join('\n---\n')}`;
+    const prompt = `You are a YouTube channel analyst. Based on the video data below (title and engagement stats), produce two sections:\n\n- Trends & Insights: a short summary plus bullet points covering which types of videos are trending, gaining reach, and driving the most engagement.\n- Top 10 Video Topic Suggestions: a numbered list of 10 specific, catchy video titles likely to gain attention, grounded in the trends you found.\n\nVideo data (top ${topVideos.length} by views):\n${videoLines}`;
 
     try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const res = await fetch('/api/analyze-video-chunks', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: process.env.NEXT_PUBLIC_GROQ_MODEL || 'llama3-70b-8192',
-          messages: [
-            { role: 'system', content: 'You are a YouTube channel analyst.' },
-            { role: 'user', content: summaryPrompt },
-          ],
-          max_tokens: 1024,
+          systemPrompt: 'You are a YouTube channel analyst.',
+          prompt,
         }),
       });
       const data = await res.json();
-      setAnalysisResult(data.choices?.[0]?.message?.content || 'No analysis result.');
+      const result = data.result || '';
+      if (!result.trim()) {
+        setAnalysisResult('Sorry, no valid analysis could be generated from your video data. Please try again or check your API limits.');
+      } else {
+        setAnalysisResult(result);
+      }
     } catch (err) {
-      setAnalysisResult('Failed to summarize analysis.');
+      setAnalysisResult('Failed to analyze the channel data. Please try again.');
     }
     setAnalysisLoading(false);
   };
